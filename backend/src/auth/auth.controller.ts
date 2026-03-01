@@ -2,6 +2,7 @@ import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto } from './auth.dto';
+import { GoogleAuthDto } from './google-auth.dto';
 
 @Controller('api/auth')
 export class AuthController {
@@ -17,9 +18,15 @@ export class AuthController {
         return this.authService.login(dto);
     }
 
+    @Post('google')
+    googleLogin(@Body() dto: GoogleAuthDto) {
+        return this.authService.googleLogin(dto);
+    }
+
     @UseGuards(AuthGuard('jwt'))
     @Get('profile')
     getProfile(@Request() req) {
         return this.authService.getProfile(req.user.id);
     }
 }
+

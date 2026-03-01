@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { loginUser } from '../api/client';
+import { loginUser, googleLogin } from '../api/client';
 
 export default function Login() {
     const [form, setForm] = useState({ email: '', password: '' });
@@ -9,6 +9,52 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
+    const googleBtnRef = useRef(null);
+
+    useEffect(() => {
+        const initGoogle = () => {
+            if (window.google && googleBtnRef.current) {
+                window.google.accounts.id.initialize({
+                    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                    callback: handleGoogleResponse,
+                });
+                window.google.accounts.id.renderButton(googleBtnRef.current, {
+                    theme: 'filled_black',
+                    size: 'large',
+                    width: '100%',
+                    text: 'signin_with',
+                    shape: 'rectangular',
+                });
+            }
+        };
+
+        // Google script might not be loaded yet
+        if (window.google) {
+            initGoogle();
+        } else {
+            const interval = setInterval(() => {
+                if (window.google) {
+                    clearInterval(interval);
+                    initGoogle();
+                }
+            }, 100);
+            return () => clearInterval(interval);
+        }
+    }, []);
+
+    const handleGoogleResponse = async (response) => {
+        setError('');
+        setLoading(true);
+        try {
+            const res = await googleLogin(response.credential);
+            login(res.data.user, res.data.accessToken);
+            navigate('/dashboard');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Google login failed');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -32,6 +78,13 @@ export default function Login() {
                 <p className="subtitle">Sign in to your Serpynx account</p>
 
                 {error && <div className="alert alert-error">{error}</div>}
+
+                {/* Google Sign-In Button */}
+                <div ref={googleBtnRef} className="google-btn-wrapper"></div>
+
+                <div className="auth-divider">
+                    <span>or sign in with email</span>
+                </div>
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">

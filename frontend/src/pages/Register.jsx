@@ -1,14 +1,70 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { registerUser } from '../api/client';
+import { registerUser, googleLogin } from '../api/client';
 
 export default function Register() {
     const [form, setForm] = useState({ name: '', email: '', password: '', role: 'FREELANCER', skills: '', bio: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [googleRole, setGoogleRole] = useState('FREELANCER');
     const { login } = useAuth();
     const navigate = useNavigate();
+    const googleBtnRef = useRef(null);
+
+    useEffect(() => {
+        const initGoogle = () => {
+            if (window.google && googleBtnRef.current) {
+                window.google.accounts.id.initialize({
+                    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                    callback: handleGoogleResponse,
+                });
+                window.google.accounts.id.renderButton(googleBtnRef.current, {
+                    theme: 'filled_black',
+                    size: 'large',
+                    width: '100%',
+                    text: 'signup_with',
+                    shape: 'rectangular',
+                });
+            }
+        };
+
+        if (window.google) {
+            initGoogle();
+        } else {
+            const interval = setInterval(() => {
+                if (window.google) {
+                    clearInterval(interval);
+                    initGoogle();
+                }
+            }, 100);
+            return () => clearInterval(interval);
+        }
+    }, []);
+
+    // Re-initialize Google when role changes so the callback captures the latest role
+    useEffect(() => {
+        if (window.google && googleBtnRef.current) {
+            window.google.accounts.id.initialize({
+                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                callback: handleGoogleResponse,
+            });
+        }
+    }, [googleRole]);
+
+    const handleGoogleResponse = async (response) => {
+        setError('');
+        setLoading(true);
+        try {
+            const res = await googleLogin(response.credential, googleRole);
+            login(res.data.user, res.data.accessToken);
+            navigate('/dashboard');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Google signup failed');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -39,6 +95,26 @@ export default function Register() {
 
                 {error && <div className="alert alert-error">{error}</div>}
 
+                {/* Role selector for Google signup */}
+                <div className="form-group">
+                    <label>I want to join as</label>
+                    <div className="role-toggle">
+                        <button type="button" className={googleRole === 'FREELANCER' ? 'active' : ''} onClick={() => { setGoogleRole('FREELANCER'); setForm({ ...form, role: 'FREELANCER' }); }}>
+                            🛠 Freelancer
+                        </button>
+                        <button type="button" className={googleRole === 'CLIENT' ? 'active' : ''} onClick={() => { setGoogleRole('CLIENT'); setForm({ ...form, role: 'CLIENT' }); }}>
+                            💼 Client
+                        </button>
+                    </div>
+                </div>
+
+                {/* Google Sign-Up Button */}
+                <div ref={googleBtnRef} className="google-btn-wrapper"></div>
+
+                <div className="auth-divider">
+                    <span>or sign up with email</span>
+                </div>
+
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Full Name</label>
@@ -53,18 +129,6 @@ export default function Register() {
                     <div className="form-group">
                         <label>Password</label>
                         <input className="form-input" type="password" value={form.password} onChange={update('password')} required minLength={6} placeholder="Min 6 characters" />
-                    </div>
-
-                    <div className="form-group">
-                        <label>I am a</label>
-                        <div className="role-toggle">
-                            <button type="button" className={form.role === 'FREELANCER' ? 'active' : ''} onClick={() => setForm({ ...form, role: 'FREELANCER' })}>
-                                🛠 Freelancer
-                            </button>
-                            <button type="button" className={form.role === 'CLIENT' ? 'active' : ''} onClick={() => setForm({ ...form, role: 'CLIENT' })}>
-                                💼 Client
-                            </button>
-                        </div>
                     </div>
 
                     {form.role === 'FREELANCER' && (

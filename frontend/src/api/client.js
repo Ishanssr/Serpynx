@@ -43,4 +43,7 @@ export const getSubmission = (taskId) => api.get(`/api/tasks/${taskId}/submissio
 export const createReview = (taskId, data) => api.post(`/api/tasks/${taskId}/review`, data);
 export const getReview = (taskId) => api.get(`/api/tasks/${taskId}/review`);
 
+// Google Auth
+export const googleLogin = (credential, role) => api.post('/api/auth/google', { credential, role });
+
 export default api;
