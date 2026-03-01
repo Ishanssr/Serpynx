@@ -1,0 +1,114 @@
+// Serpynx - Freelance Marketplace Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CLIENT
+  FREELANCER
+}
+
+enum TaskStatus {
+  OPEN
+  ASSIGNED
+  IN_REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String
+  password       String
+  role           Role
+  skills         String[] @default([])
+  bio            String?
+  avgRating      Float    @default(0)
+  totalReviews   Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  tasksPosted    Task[]       @relation("ClientTasks")
+  bids           Bid[]        @relation("FreelancerBids")
+  submissions    Submission[] @relation("FreelancerSubmissions")
+  reviewsGiven   Review[]     @relation("ReviewsGiven")
+  reviewsReceived Review[]    @relation("ReviewsReceived")
+}
+
+model Task {
+  id             String     @id @default(uuid())
+  title          String
+  description    String
+  budget         Float
+  requiredSkills String[]   @default([])
+  status         TaskStatus @default(OPEN)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  // Relations
+  clientId       String
+  client         User       @relation("ClientTasks", fields: [clientId], references: [id])
+  assignedToId   String?
+  bids           Bid[]
+  submission     Submission?
+  review         Review?
+}
+
+model Bid {
+  id             String    @id @default(uuid())
+  amount         Float
+  coverLetter    String
+  estimatedDays  Int
+  smartScore     Float     @default(0)
+  status         BidStatus @default(PENDING)
+  createdAt      DateTime  @default(now())
+
+  // Relations
+  freelancerId   String
+  freelancer     User      @relation("FreelancerBids", fields: [freelancerId], references: [id])
+  taskId         String
+  task           Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([freelancerId, taskId])
+}
+
+model Submission {
+  id             String   @id @default(uuid())
+  content        String
+  link           String?
+  submittedAt    DateTime @default(now())
+
+  // Relations
+  freelancerId   String
+  freelancer     User     @relation("FreelancerSubmissions", fields: [freelancerId], references: [id])
+  taskId         String   @unique
+  task           Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id             String   @id @default(uuid())
+  rating         Int
+  comment        String?
+  createdAt      DateTime @default(now())
+
+  // Relations
+  reviewerId     String
+  reviewer       User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  revieweeId     String
+  reviewee       User     @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+  taskId         String   @unique
+  task           Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
