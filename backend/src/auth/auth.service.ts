@@ -26,8 +26,10 @@ export class AuthService {
         }
 
         const hashedPassword = await bcrypt.hash(dto.password, 10);
+        // Auto-verify unless REQUIRE_EMAIL_VERIFICATION is explicitly set
+        const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
         const verificationToken = crypto.randomUUID();
-        const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+        const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
         const user = await this.prisma.user.create({
             data: {
@@ -37,23 +39,32 @@ export class AuthService {
                 role: dto.role,
                 skills: dto.skills || [],
                 bio: dto.bio,
-                isVerified: false,
-                verificationToken,
-                verificationExpires,
+                isVerified: !requireVerification, // auto-verify when not required
+                verificationToken: requireVerification ? verificationToken : null,
+                verificationExpires: requireVerification ? verificationExpires : null,
             },
         });
 
-        // Send verification email in background — don't block registration response
-        this.emailService.sendVerificationEmail(user.email, user.name, verificationToken);
+        // Send welcome/verification email in background
+        if (requireVerification) {
+            this.emailService.sendVerificationEmail(user.email, user.name, verificationToken);
+        }
+
+        const token = this.generateToken(user.id, user.email, user.role);
 
         return {
-            message: 'Registration successful! Please check your email to verify your account.',
+            message: requireVerification
+                ? 'Registration successful! Please check your email to verify your account.'
+                : 'Registration successful!',
             user: {
                 id: user.id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                skills: user.skills,
+                bio: user.bio,
             },
+            accessToken: requireVerification ? undefined : token,
         };
     }
 
@@ -70,8 +81,9 @@ export class AuthService {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        // Block login if email is not verified
-        if (!user.isVerified) {
+        // Block login if email verification is required and not verified
+        const requireVerification = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
+        if (requireVerification && !user.isVerified) {
             throw new UnauthorizedException('Please verify your email before logging in. Check your inbox for the verification link.');
         }
 

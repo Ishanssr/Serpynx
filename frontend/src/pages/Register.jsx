@@ -77,7 +77,14 @@ export default function Register() {
                 ...form,
                 skills: skillsArr,
             });
-            setRegistered(true);
+            // If auto-verified, log in immediately
+            if (res.data.accessToken) {
+                login(res.data.user, res.data.accessToken);
+                navigate('/dashboard');
+            } else {
+                // Email verification required — show check email message
+                setRegistered(true);
+            }
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed');
         } finally {
