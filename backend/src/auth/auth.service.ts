@@ -43,8 +43,8 @@ export class AuthService {
             },
         });
 
-        // Send verification email (non-blocking — won't fail registration)
-        await this.emailService.sendVerificationEmail(user.email, user.name, verificationToken);
+        // Send verification email in background — don't block registration response
+        this.emailService.sendVerificationEmail(user.email, user.name, verificationToken);
 
         return {
             message: 'Registration successful! Please check your email to verify your account.',
@@ -145,7 +145,8 @@ export class AuthService {
             data: { verificationToken, verificationExpires },
         });
 
-        await this.emailService.sendVerificationEmail(user.email, user.name, verificationToken);
+        // Fire-and-forget — don't block the response
+        this.emailService.sendVerificationEmail(user.email, user.name, verificationToken);
 
         return { message: 'If an account with that email exists, a verification link has been sent.' };
     }
