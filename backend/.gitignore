@@ -4,5 +4,5 @@ node_modules
 
 /generated/prisma
 
-# Uploaded files
-uploads/
+# Uploaded files (root dir only, not src/uploads/)
+/uploads/
