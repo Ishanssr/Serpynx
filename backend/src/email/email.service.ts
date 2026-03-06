@@ -8,13 +8,12 @@ export class EmailService {
     private readonly fromEmail: string;
 
     constructor(private configService: ConfigService) {
-        // Use SMTP_PASS as the Resend API key (same value)
         this.apiKey = this.configService.get<string>('SMTP_PASS') ||
             this.configService.get<string>('RESEND_API_KEY');
         this.fromEmail = this.configService.get<string>('SMTP_FROM') || 'onboarding@resend.dev';
 
         if (this.apiKey) {
-            this.logger.log(`Email configured via Resend HTTP API (from: ${this.fromEmail})`);
+            this.logger.log(`Email configured via Resend HTTP API (from: ${this.fromEmail}, key: ${this.apiKey.slice(0, 8)}...)`);
         } else {
             this.logger.warn('No email API key configured — emails will be logged to console');
         }
@@ -53,11 +52,19 @@ export class EmailService {
         `;
 
         if (!this.apiKey) {
-            // Dev mode — just log it
             this.logger.log(`[DEV EMAIL] Verification email for ${to}:`);
             this.logger.log(`  → Verify URL: ${verifyUrl}`);
             return;
         }
+
+        const payload = {
+            from: this.fromEmail,
+            to: [to],
+            subject: 'Verify your Serpynx account',
+            html,
+        };
+
+        this.logger.log(`Sending email to ${to} from ${this.fromEmail}...`);
 
         try {
             const res = await fetch('https://api.resend.com/emails', {
@@ -66,22 +73,17 @@ export class EmailService {
                     'Authorization': `Bearer ${this.apiKey}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    from: this.fromEmail,
-                    to: [to],
-                    subject: 'Verify your Serpynx account',
-                    html,
-                }),
+                body: JSON.stringify(payload),
             });
 
-            if (res.ok) {
-                this.logger.log(`Verification email sent to ${to}`);
-            } else {
-                const error = await res.json();
-                this.logger.error(`Resend API error for ${to}: ${JSON.stringify(error)}`);
+            const responseBody = await res.text();
+            this.logger.log(`Resend API response [${res.status}]: ${responseBody}`);
+
+            if (!res.ok) {
+                this.logger.error(`Resend API failed for ${to}: status=${res.status} body=${responseBody}`);
             }
         } catch (error) {
-            this.logger.error(`Failed to send verification email to ${to}`, error);
+            this.logger.error(`Failed to send verification email to ${to}: ${error.message}`);
         }
     }
 }
