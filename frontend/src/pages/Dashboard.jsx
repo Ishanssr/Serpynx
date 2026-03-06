@@ -15,13 +15,15 @@ export default function Dashboard() {
             try {
                 if (isClient) {
                     const res = await getMyTasks();
-                    setData(res.data);
+                    // Handle both array and paginated { data, meta } responses
+                    setData(Array.isArray(res.data) ? res.data : (res.data?.data || []));
                 } else {
                     const res = await getMyBids();
-                    setData(res.data);
+                    setData(Array.isArray(res.data) ? res.data : (res.data?.data || []));
                 }
             } catch (err) {
                 console.error(err);
+                setData([]);
             } finally {
                 setLoading(false);
             }
