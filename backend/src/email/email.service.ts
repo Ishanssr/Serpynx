@@ -1,32 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
     private readonly logger = new Logger(EmailService.name);
-    private transporter: nodemailer.Transporter;
+    private readonly apiKey: string | undefined;
+    private readonly fromEmail: string;
 
     constructor(private configService: ConfigService) {
-        const host = this.configService.get<string>('SMTP_HOST');
-        const port = this.configService.get<number>('SMTP_PORT') || 587;
-        const user = this.configService.get<string>('SMTP_USER');
-        const pass = this.configService.get<string>('SMTP_PASS');
+        // Use SMTP_PASS as the Resend API key (same value)
+        this.apiKey = this.configService.get<string>('SMTP_PASS') ||
+            this.configService.get<string>('RESEND_API_KEY');
+        this.fromEmail = this.configService.get<string>('SMTP_FROM') || 'onboarding@resend.dev';
 
-        if (host && user && pass) {
-            this.transporter = nodemailer.createTransport({
-                host,
-                port,
-                secure: port === 465,
-                auth: { user, pass },
-            });
-            this.logger.log(`Email configured via ${host}`);
+        if (this.apiKey) {
+            this.logger.log(`Email configured via Resend HTTP API (from: ${this.fromEmail})`);
         } else {
-            // Dev mode — log emails to console instead of sending
-            this.logger.warn('SMTP not configured — emails will be logged to console');
-            this.transporter = nodemailer.createTransport({
-                jsonTransport: true,
-            });
+            this.logger.warn('No email API key configured — emails will be logged to console');
         }
     }
 
@@ -62,26 +52,36 @@ export class EmailService {
             </div>
         `;
 
+        if (!this.apiKey) {
+            // Dev mode — just log it
+            this.logger.log(`[DEV EMAIL] Verification email for ${to}:`);
+            this.logger.log(`  → Verify URL: ${verifyUrl}`);
+            return;
+        }
+
         try {
-            const info = await this.transporter.sendMail({
-                from: this.configService.get<string>('SMTP_FROM') || '"Serpynx" <noreply@serpynx.com>',
-                to,
-                subject: 'Verify your Serpynx account',
-                html,
+            const res = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from: this.fromEmail,
+                    to: [to],
+                    subject: 'Verify your Serpynx account',
+                    html,
+                }),
             });
 
-            if (info.message) {
-                // jsonTransport (dev mode) — log the email content
-                this.logger.log(`[DEV EMAIL] Verification email for ${to}:`);
-                const parsed = JSON.parse(info.message);
-                this.logger.log(`  → Subject: ${parsed.subject}`);
-                this.logger.log(`  → Verify URL: ${verifyUrl}`);
-            } else {
+            if (res.ok) {
                 this.logger.log(`Verification email sent to ${to}`);
+            } else {
+                const error = await res.json();
+                this.logger.error(`Resend API error for ${to}: ${JSON.stringify(error)}`);
             }
         } catch (error) {
             this.logger.error(`Failed to send verification email to ${to}`, error);
-            // Don't throw — we don't want email failures to block registration
         }
     }
 }
