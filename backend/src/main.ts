@@ -14,10 +14,7 @@ async function bootstrap() {
   // Serve uploaded files
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
-  // Security headers
-  app.use(helmet());
-
-  // CORS — only allow configured frontend origin in production
+  // CORS — must be before Helmet
   const allowedOrigins: string[] = [];
   if (process.env.NODE_ENV !== 'production') {
     allowedOrigins.push('http://localhost:5173', 'http://localhost:3000');
@@ -29,6 +26,11 @@ async function bootstrap() {
     origin: allowedOrigins,
     credentials: true,
   });
+
+  // Security headers — configured to allow cross-origin API calls
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  }));
 
   // Global validation pipe
   app.useGlobalPipes(
