@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NotificationBell from './NotificationBell';
 
 export default function Layout({ children }) {
     const { user, logout } = useAuth();
@@ -28,6 +29,11 @@ export default function Layout({ children }) {
                     <li>
                         <NavLink to="/tasks" className={({ isActive }) => isActive ? 'active' : ''}>
                             📋 Browse Tasks
+                        </NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/freelancers" className={({ isActive }) => isActive ? 'active' : ''}>
+                            🔍 Find Freelancers
                         </NavLink>
                     </li>
                     {isClient && (
@@ -61,6 +67,9 @@ export default function Layout({ children }) {
             </aside>
 
             <main className="main-content">
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 0', marginBottom: 8 }}>
+                    <NotificationBell />
+                </div>
                 {children}
             </main>
         </div>

@@ -1,5 +1,6 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray, IsEnum, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray, IsEnum, Min, Max } from 'class-validator';
 import { TaskStatus } from '@prisma/client';
+import { Type } from 'class-transformer';
 
 export class CreateTaskDto {
     @IsString()
@@ -40,7 +41,11 @@ export class UpdateTaskDto {
     requiredSkills?: string[];
 }
 
-export class TaskFilterDto {
+export class TaskQueryDto {
+    @IsOptional()
+    @IsString()
+    search?: string;
+
     @IsOptional()
     @IsEnum(TaskStatus)
     status?: TaskStatus;
@@ -48,4 +53,52 @@ export class TaskFilterDto {
     @IsOptional()
     @IsString()
     skill?: string;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0)
+    minBudget?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0)
+    maxBudget?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(1)
+    page?: number = 1;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(1)
+    @Max(50)
+    limit?: number = 12;
+
+    @IsOptional()
+    @IsString()
+    sortBy?: 'createdAt' | 'budget' = 'createdAt';
+
+    @IsOptional()
+    @IsString()
+    sortOrder?: 'asc' | 'desc' = 'desc';
+}
+
+export class PaginationQueryDto {
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(1)
+    page?: number = 1;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(1)
+    @Max(50)
+    limit?: number = 12;
 }

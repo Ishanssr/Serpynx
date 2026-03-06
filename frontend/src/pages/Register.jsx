@@ -7,6 +7,7 @@ export default function Register() {
     const [form, setForm] = useState({ name: '', email: '', password: '', role: 'FREELANCER', skills: '', bio: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [registered, setRegistered] = useState(false);
     const [googleRole, setGoogleRole] = useState('FREELANCER');
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -76,8 +77,7 @@ export default function Register() {
                 ...form,
                 skills: skillsArr,
             });
-            login(res.data.user, res.data.accessToken);
-            navigate('/dashboard');
+            setRegistered(true);
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed');
         } finally {
@@ -90,68 +90,84 @@ export default function Register() {
     return (
         <div className="auth-container">
             <div className="auth-card">
-                <h1>Join Serpynx</h1>
-                <p className="subtitle">Create your account and start building</p>
-
-                {error && <div className="alert alert-error">{error}</div>}
-
-                {/* Role selector for Google signup */}
-                <div className="form-group">
-                    <label>I want to join as</label>
-                    <div className="role-toggle">
-                        <button type="button" className={googleRole === 'FREELANCER' ? 'active' : ''} onClick={() => { setGoogleRole('FREELANCER'); setForm({ ...form, role: 'FREELANCER' }); }}>
-                            🛠 Freelancer
-                        </button>
-                        <button type="button" className={googleRole === 'CLIENT' ? 'active' : ''} onClick={() => { setGoogleRole('CLIENT'); setForm({ ...form, role: 'CLIENT' }); }}>
-                            💼 Client
-                        </button>
+                {registered ? (
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📧</div>
+                        <h1>Check your email!</h1>
+                        <p className="subtitle" style={{ marginBottom: '1.5rem' }}>
+                            We've sent a verification link to <strong>{form.email}</strong>.
+                            Please click the link to verify your account.
+                        </p>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            Already verified? <Link to="/login">Sign in</Link>
+                        </p>
                     </div>
-                </div>
+                ) : (
+                    <>
+                        <h1>Join Serpynx</h1>
+                        <p className="subtitle">Create your account and start building</p>
 
-                {/* Google Sign-Up Button */}
-                <div ref={googleBtnRef} className="google-btn-wrapper"></div>
+                        {error && <div className="alert alert-error">{error}</div>}
 
-                <div className="auth-divider">
-                    <span>or sign up with email</span>
-                </div>
-
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Full Name</label>
-                        <input className="form-input" value={form.name} onChange={update('name')} required placeholder="John Doe" />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Email</label>
-                        <input className="form-input" type="email" value={form.email} onChange={update('email')} required placeholder="you@example.com" />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Password</label>
-                        <input className="form-input" type="password" value={form.password} onChange={update('password')} required minLength={6} placeholder="Min 6 characters" />
-                    </div>
-
-                    {form.role === 'FREELANCER' && (
-                        <>
-                            <div className="form-group">
-                                <label>Skills (comma separated)</label>
-                                <input className="form-input" value={form.skills} onChange={update('skills')} placeholder="React, Node.js, Python" />
+                        {/* Role selector for Google signup */}
+                        <div className="form-group">
+                            <label>I want to join as</label>
+                            <div className="role-toggle">
+                                <button type="button" className={googleRole === 'FREELANCER' ? 'active' : ''} onClick={() => { setGoogleRole('FREELANCER'); setForm({ ...form, role: 'FREELANCER' }); }}>
+                                    🛠 Freelancer
+                                </button>
+                                <button type="button" className={googleRole === 'CLIENT' ? 'active' : ''} onClick={() => { setGoogleRole('CLIENT'); setForm({ ...form, role: 'CLIENT' }); }}>
+                                    💼 Client
+                                </button>
                             </div>
+                        </div>
+
+                        {/* Google Sign-Up Button */}
+                        <div ref={googleBtnRef} className="google-btn-wrapper"></div>
+
+                        <div className="auth-divider">
+                            <span>or sign up with email</span>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
                             <div className="form-group">
-                                <label>Bio</label>
-                                <textarea className="form-textarea" value={form.bio} onChange={update('bio')} placeholder="Tell clients about yourself..." rows={3} />
+                                <label>Full Name</label>
+                                <input className="form-input" value={form.name} onChange={update('name')} required placeholder="John Doe" />
                             </div>
-                        </>
-                    )}
 
-                    <button className="btn btn-primary btn-full" type="submit" disabled={loading}>
-                        {loading ? 'Creating account...' : 'Create Account'}
-                    </button>
-                </form>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input className="form-input" type="email" value={form.email} onChange={update('email')} required placeholder="you@example.com" />
+                            </div>
 
-                <p style={{ textAlign: 'center', marginTop: 20, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    Already have an account? <Link to="/login">Sign in</Link>
-                </p>
+                            <div className="form-group">
+                                <label>Password</label>
+                                <input className="form-input" type="password" value={form.password} onChange={update('password')} required minLength={8} placeholder="Min 8 chars, upper + lower + number" />
+                            </div>
+
+                            {form.role === 'FREELANCER' && (
+                                <>
+                                    <div className="form-group">
+                                        <label>Skills (comma separated)</label>
+                                        <input className="form-input" value={form.skills} onChange={update('skills')} placeholder="React, Node.js, Python" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Bio</label>
+                                        <textarea className="form-textarea" value={form.bio} onChange={update('bio')} placeholder="Tell clients about yourself..." rows={3} />
+                                    </div>
+                                </>
+                            )}
+
+                            <button className="btn btn-primary btn-full" type="submit" disabled={loading}>
+                                {loading ? 'Creating account...' : 'Create Account'}
+                            </button>
+                        </form>
+
+                        <p style={{ textAlign: 'center', marginTop: 20, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            Already have an account? <Link to="/login">Sign in</Link>
+                        </p>
+                    </>
+                )}
             </div>
         </div>
     );

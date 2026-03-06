@@ -9,7 +9,7 @@ export default function MyBids() {
 
     useEffect(() => {
         getMyBids()
-            .then((res) => setBids(res.data))
+            .then((res) => setBids(res.data.data || res.data))
             .catch(console.error)
             .finally(() => setLoading(false));
     }, []);

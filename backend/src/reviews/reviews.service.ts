@@ -5,11 +5,15 @@ import {
     BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateReviewDto } from './reviews.dto';
 
 @Injectable()
 export class ReviewsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private notificationsService: NotificationsService,
+    ) { }
 
     async createReview(taskId: string, reviewerId: string, dto: CreateReviewDto) {
         const task = await this.prisma.task.findUnique({ where: { id: taskId } });
@@ -18,9 +22,13 @@ export class ReviewsService {
         if (task.status !== 'IN_REVIEW') throw new BadRequestException('Task is not in review status');
         if (!task.assignedToId) throw new BadRequestException('No freelancer assigned');
 
-        // Check existing review
         const existing = await this.prisma.review.findUnique({ where: { taskId } });
         if (existing) throw new BadRequestException('Review already submitted');
+
+        const reviewer = await this.prisma.user.findUnique({
+            where: { id: reviewerId },
+            select: { name: true },
+        });
 
         const review = await this.prisma.review.create({
             data: {
@@ -32,7 +40,6 @@ export class ReviewsService {
             },
         });
 
-        // Update task status to COMPLETED
         await this.prisma.task.update({
             where: { id: taskId },
             data: { status: 'COMPLETED' },
@@ -52,6 +59,11 @@ export class ReviewsService {
                 totalReviews: allReviews.length,
             },
         });
+
+        // Notify the freelancer that they received a review
+        await this.notificationsService.notifyReviewReceived(
+            task.assignedToId, reviewer?.name || 'The client', taskId, task.title,
+        );
 
         return review;
     }

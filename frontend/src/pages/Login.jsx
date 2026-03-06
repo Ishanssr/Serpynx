@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { loginUser, googleLogin } from '../api/client';
+import { loginUser, googleLogin, resendVerification } from '../api/client';
 
 export default function Login() {
     const [form, setForm] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [unverified, setUnverified] = useState(false);
+    const [resendMsg, setResendMsg] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
     const googleBtnRef = useRef(null);
@@ -65,7 +67,11 @@ export default function Login() {
             login(res.data.user, res.data.accessToken);
             navigate('/dashboard');
         } catch (err) {
-            setError(err.response?.data?.message || 'Login failed');
+            const msg = err.response?.data?.message || 'Login failed';
+            setError(msg);
+            if (typeof msg === 'string' && msg.toLowerCase().includes('verify')) {
+                setUnverified(true);
+            }
         } finally {
             setLoading(false);
         }
@@ -78,6 +84,28 @@ export default function Login() {
                 <p className="subtitle">Sign in to your Serpynx account</p>
 
                 {error && <div className="alert alert-error">{error}</div>}
+
+                {unverified && (
+                    <div style={{ textAlign: 'center', margin: '0.5rem 0 1rem' }}>
+                        <button
+                            className="btn btn-secondary"
+                            style={{ fontSize: '0.85rem' }}
+                            onClick={async () => {
+                                try {
+                                    const res = await resendVerification(form.email);
+                                    setResendMsg(res.data.message);
+                                    setUnverified(false);
+                                    setError('');
+                                } catch {
+                                    setResendMsg('Failed to resend. Try again.');
+                                }
+                            }}
+                        >
+                            📧 Resend verification email
+                        </button>
+                        {resendMsg && <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.5rem' }}>{resendMsg}</p>}
+                    </div>
+                )}
 
                 {/* Google Sign-In Button */}
                 <div ref={googleBtnRef} className="google-btn-wrapper"></div>

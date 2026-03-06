@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TasksService } from './tasks.service';
-import { CreateTaskDto, UpdateTaskDto } from './tasks.dto';
+import { CreateTaskDto, UpdateTaskDto, TaskQueryDto } from './tasks.dto';
 import { Roles } from '../common/roles.decorator';
 import { RolesGuard } from '../common/roles.guard';
 import { Role } from '@prisma/client';
@@ -14,8 +14,8 @@ export class TasksController {
     constructor(private tasksService: TasksService) { }
 
     @Get()
-    findAll(@Query('status') status?: string, @Query('skill') skill?: string) {
-        return this.tasksService.findAll({ status, skill });
+    findAll(@Query() query: TaskQueryDto) {
+        return this.tasksService.findAll(query);
     }
 
     @Get('my')

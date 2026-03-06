@@ -5,6 +5,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 const api = axios.create({
     baseURL: API_BASE,
     headers: { 'Content-Type': 'application/json' },
+    timeout: 10000, // 10s timeout — prevents infinite spinner when backend is down
 });
 
 // Attach JWT to every request
@@ -45,5 +46,19 @@ export const getReview = (taskId) => api.get(`/api/tasks/${taskId}/review`);
 
 // Google Auth
 export const googleLogin = (credential, role) => api.post('/api/auth/google', { credential, role });
+
+// Email Verification
+export const verifyEmail = (token) => api.get(`/api/auth/verify?token=${token}`);
+export const resendVerification = (email) => api.post('/api/auth/resend-verification', { email });
+
+// Notifications
+export const getNotifications = (params) => api.get('/api/notifications', { params });
+export const getUnreadCount = () => api.get('/api/notifications/unread-count');
+export const markNotificationRead = (id) => api.patch(`/api/notifications/${id}/read`);
+export const markAllNotificationsRead = () => api.patch('/api/notifications/read-all');
+
+// Users / Profiles
+export const searchFreelancers = (params) => api.get('/api/users/freelancers', { params });
+export const getPublicProfile = (userId) => api.get(`/api/users/${userId}`);
 
 export default api;

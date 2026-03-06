@@ -1,5 +1,5 @@
 import {
-    Controller, Get, Post, Body, Param, UseGuards, Request,
+    Controller, Get, Post, Body, Param, Query, UseGuards, Request,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { BidsService } from './bids.service';
@@ -24,8 +24,12 @@ export class BidsController {
     }
 
     @Get('tasks/:taskId/bids')
-    getTaskBids(@Param('taskId') taskId: string) {
-        return this.bidsService.getTaskBids(taskId);
+    getTaskBids(
+        @Param('taskId') taskId: string,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
+        return this.bidsService.getTaskBids(taskId, Number(page) || 1, Number(limit) || 20);
     }
 
     @Post('bids/:bidId/accept')
@@ -38,7 +42,11 @@ export class BidsController {
     @Get('my-bids')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.FREELANCER)
-    getMyBids(@Request() req) {
-        return this.bidsService.getFreelancerBids(req.user.id);
+    getMyBids(
+        @Request() req,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+    ) {
+        return this.bidsService.getFreelancerBids(req.user.id, Number(page) || 1, Number(limit) || 20);
     }
 }

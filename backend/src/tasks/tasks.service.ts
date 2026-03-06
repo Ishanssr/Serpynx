@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTaskDto, UpdateTaskDto } from './tasks.dto';
+import { CreateTaskDto, UpdateTaskDto, TaskQueryDto } from './tasks.dto';
 
 @Injectable()
 export class TasksService {
@@ -21,23 +21,53 @@ export class TasksService {
         });
     }
 
-    async findAll(filters?: { status?: string; skill?: string }) {
-        const where: any = {};
-        if (filters?.status) {
-            where.status = filters.status;
+    async findAll(query: TaskQueryDto) {
+        const { search, status, skill, minBudget, maxBudget, page = 1, limit = 12, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+        const where: any = { deletedAt: null };
+
+        if (status) {
+            where.status = status;
         }
-        if (filters?.skill) {
-            where.requiredSkills = { has: filters.skill };
+        if (skill) {
+            where.requiredSkills = { has: skill };
+        }
+        if (minBudget !== undefined || maxBudget !== undefined) {
+            where.budget = {};
+            if (minBudget !== undefined) where.budget.gte = minBudget;
+            if (maxBudget !== undefined) where.budget.lte = maxBudget;
+        }
+        if (search) {
+            where.OR = [
+                { title: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+            ];
         }
 
-        return this.prisma.task.findMany({
-            where,
-            include: {
-                client: { select: { id: true, name: true } },
-                _count: { select: { bids: true } },
+        const skip = (page - 1) * limit;
+
+        const [tasks, total] = await this.prisma.$transaction([
+            this.prisma.task.findMany({
+                where,
+                include: {
+                    client: { select: { id: true, name: true } },
+                    _count: { select: { bids: true } },
+                },
+                orderBy: { [sortBy]: sortOrder },
+                skip,
+                take: limit,
+            }),
+            this.prisma.task.count({ where }),
+        ]);
+
+        return {
+            data: tasks,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
             },
-            orderBy: { createdAt: 'desc' },
-        });
+        };
     }
 
     async findOne(id: string) {
@@ -63,7 +93,7 @@ export class TasksService {
 
     async findByClient(clientId: string) {
         return this.prisma.task.findMany({
-            where: { clientId },
+            where: { clientId, deletedAt: null },
             include: {
                 _count: { select: { bids: true } },
             },
@@ -88,6 +118,10 @@ export class TasksService {
         if (task.clientId !== clientId) throw new ForbiddenException('Not your task');
         if (task.status !== 'OPEN') throw new ForbiddenException('Cannot delete a non-open task');
 
-        return this.prisma.task.delete({ where: { id } });
+        // Soft delete
+        return this.prisma.task.update({
+            where: { id },
+            data: { deletedAt: new Date() },
+        });
     }
 }

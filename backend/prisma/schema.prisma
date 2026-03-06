@@ -28,18 +28,23 @@ enum BidStatus {
 }
 
 model User {
-  id             String   @id @default(uuid())
-  email          String   @unique
-  name           String
-  password       String?
-  googleId       String?   @unique
-  role           Role
-  skills         String[] @default([])
-  bio            String?
-  avgRating      Float    @default(0)
-  totalReviews   Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  name                String
+  password            String?
+  googleId            String?   @unique
+  role                Role
+  skills              String[]  @default([])
+  bio                 String?
+  avatarUrl           String?
+  avgRating           Float     @default(0)
+  totalReviews        Int       @default(0)
+  isVerified          Boolean   @default(false)
+  verificationToken   String?   @unique
+  verificationExpires DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
 
   // Relations
   tasksPosted    Task[]       @relation("ClientTasks")
@@ -47,6 +52,9 @@ model User {
   submissions    Submission[] @relation("FreelancerSubmissions")
   reviewsGiven   Review[]     @relation("ReviewsGiven")
   reviewsReceived Review[]    @relation("ReviewsReceived")
+  notifications  Notification[] @relation("UserNotifications")
+
+  @@index([role])
 }
 
 model Task {
@@ -58,6 +66,7 @@ model Task {
   status         TaskStatus @default(OPEN)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
+  deletedAt      DateTime?
 
   // Relations
   clientId       String
@@ -66,6 +75,10 @@ model Task {
   bids           Bid[]
   submission     Submission?
   review         Review?
+
+  @@index([clientId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Bid {
@@ -84,6 +97,9 @@ model Bid {
   task           Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@unique([freelancerId, taskId])
+  @@index([taskId])
+  @@index([freelancerId])
+  @@index([status])
 }
 
 model Submission {
@@ -112,4 +128,20 @@ model Review {
   reviewee       User     @relation("ReviewsReceived", fields: [revieweeId], references: [id])
   taskId         String   @unique
   task           Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  type      String   // BID_RECEIVED, BID_ACCEPTED, BID_REJECTED, WORK_SUBMITTED, REVIEW_RECEIVED, TASK_ASSIGNED
+  message   String
+  isRead    Boolean  @default(false)
+  link      String?  // frontend route to navigate to, e.g. /tasks/xyz
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId    String
+  user      User     @relation("UserNotifications", fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
 }
