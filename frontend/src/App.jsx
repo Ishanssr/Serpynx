@@ -4,6 +4,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import HomePage from './pages/HomePage';
 import Dashboard from './pages/Dashboard';
 import TaskList from './pages/TaskList';
 import TaskDetail from './pages/TaskDetail';
@@ -32,6 +33,7 @@ function PublicRoute({ children }) {
 function AppRoutes() {
     return (
         <Routes>
+            <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
             <Route path="/verify" element={<VerifyEmail />} />
@@ -43,7 +45,7 @@ function AppRoutes() {
             <Route path="/tasks/:id" element={<ProtectedRoute><TaskDetail /></ProtectedRoute>} />
             <Route path="/my-bids" element={<ProtectedRoute><MyBids /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="*" element={<Navigate to="/dashboard" />} />
+            <Route path="*" element={<HomePage />} />
         </Routes>
     );
 }
