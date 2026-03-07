@@ -34,6 +34,8 @@ export const deleteTask = (id) => api.delete(`/api/tasks/${id}`);
 export const getTaskBids = (taskId) => api.get(`/api/tasks/${taskId}/bids`);
 export const createBid = (taskId, data) => api.post(`/api/tasks/${taskId}/bids`, data);
 export const acceptBid = (bidId) => api.post(`/api/bids/${bidId}/accept`);
+export const assignPrimaryAndStandby = (taskId, data) => api.post(`/api/tasks/${taskId}/assign`, data);
+export const triggerStandbyTakeover = (taskId) => api.post(`/api/tasks/${taskId}/standby-takeover`);
 export const getMyBids = () => api.get('/api/my-bids');
 
 // Submissions

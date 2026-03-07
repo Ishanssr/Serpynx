@@ -25,6 +25,7 @@ enum BidStatus {
   PENDING
   ACCEPTED
   REJECTED
+  STANDBY
 }
 
 enum TeamRole {
@@ -90,6 +91,8 @@ model Task {
   clientId       String
   client         User       @relation("ClientTasks", fields: [clientId], references: [id])
   assignedToId   String?
+  primaryBidId   String?
+  standbyBidId   String?
   bids           Bid[]
   submission     Submission?
   review         Review?

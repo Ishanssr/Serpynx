@@ -143,4 +143,22 @@ export class NotificationsService {
             link: `/tasks/${taskId}`,
         });
     }
+
+  async notifyStandbyAssigned(freelancerId: string, taskId: string, taskTitle: string) {
+    return this.create({
+      userId: freelancerId,
+      type: 'TASK_STANDBY_ASSIGNED',
+      message: `You're the standby freelancer for "${taskTitle}". Stay available in case a takeover is needed.`,
+      link: `/tasks/${taskId}`,
+    });
+  }
+
+  async notifyStandbyPromoted(freelancerId: string, taskId: string, taskTitle: string) {
+    return this.create({
+      userId: freelancerId,
+      type: 'TASK_STANDBY_PROMOTED',
+      message: `You've been promoted from standby to primary on "${taskTitle}" — you can continue where the previous freelancer left off.`,
+      link: `/tasks/${taskId}`,
+    });
+  }
 }

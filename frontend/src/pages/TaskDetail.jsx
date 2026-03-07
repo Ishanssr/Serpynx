@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getTask, createBid, acceptBid, submitWork, createReview, getMyTeams } from '../api/client';
+import { getTask, createBid, assignPrimaryAndStandby, triggerStandbyTakeover, submitWork, createReview, getMyTeams } from '../api/client';
 import { ScoreBar, StarRating, StatusBadge, SkillTags, Loading } from '../components/UI';
 
 export default function TaskDetail() {
@@ -17,11 +17,23 @@ export default function TaskDetail() {
     const [success, setSuccess] = useState('');
     const [showBidForm, setShowBidForm] = useState(false);
     const [myTeams, setMyTeams] = useState([]);
+    const [primaryBidId, setPrimaryBidId] = useState('');
+    const [standbyBidId, setStandbyBidId] = useState('');
 
     const fetchTask = async () => {
         try {
             const res = await getTask(id);
-            setTask(res.data);
+            const data = res.data;
+            setTask(data);
+            if (Array.isArray(data.bids) && data.bids.length > 0) {
+                const primaryDefault = data.primaryBidId || data.bids[0]?.id || '';
+                const standbyDefault = data.standbyBidId || (data.bids[1]?.id && data.bids[1].id !== primaryDefault ? data.bids[1].id : '');
+                setPrimaryBidId(primaryDefault);
+                setStandbyBidId(standbyDefault);
+            } else {
+                setPrimaryBidId('');
+                setStandbyBidId('');
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -63,13 +75,33 @@ export default function TaskDetail() {
         }
     };
 
-    const handleAcceptBid = async (bidId) => {
+    const handleAssignPrimaryAndStandby = async () => {
+        setError(''); setSuccess('');
         try {
-            await acceptBid(bidId);
-            setSuccess('Bid accepted! Task assigned.');
+            if (!primaryBidId) {
+                setError('Please select a primary freelancer');
+                return;
+            }
+            if (standbyBidId && standbyBidId === primaryBidId) {
+                setError('Primary and standby freelancers must be different');
+                return;
+            }
+            await assignPrimaryAndStandby(id, { primaryBidId, standbyBidId: standbyBidId || undefined });
+            setSuccess('Primary and standby freelancers assigned. The standby can take over instantly if needed.');
             fetchTask();
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to accept bid');
+            setError(err.response?.data?.message || 'Failed to assign freelancers');
+        }
+    };
+
+    const handleStandbyTakeover = async () => {
+        setError(''); setSuccess('');
+        try {
+            await triggerStandbyTakeover(id);
+            setSuccess('Standby freelancer promoted to primary. Work can continue without re-opening bids.');
+            fetchTask();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to promote standby freelancer');
         }
     };
 
@@ -196,6 +228,74 @@ export default function TaskDetail() {
             {task.bids?.length > 0 && (
                 <div className="detail-section">
                     <h2>Bids ({task.bids.length}) — Ranked by Smart Score</h2>
+
+                    {isOwner && task.status === 'OPEN' && (
+                        <div className="card" style={{ marginBottom: 16 }}>
+                            <h3 style={{ marginTop: 0, marginBottom: 12 }}>Select Primary & Standby Freelancers</h3>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: 16 }}>
+                                Choose a <strong>primary</strong> freelancer and an optional <strong>standby</strong> freelancer.
+                                If the primary underperforms, the standby can immediately take over using the same files, repo, and chat.
+                            </p>
+                            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                                <div className="form-group" style={{ minWidth: 220, flex: 1 }}>
+                                    <label>Primary freelancer</label>
+                                    <select
+                                        className="form-select"
+                                        value={primaryBidId}
+                                        onChange={(e) => setPrimaryBidId(e.target.value)}
+                                    >
+                                        <option value="">Select primary</option>
+                                        {task.bids.map((bid, index) => (
+                                            <option key={bid.id} value={bid.id}>
+                                                {index === 0 ? '★ ' : ''}
+                                                {bid.freelancer?.name} — {Math.round(bid.smartScore * 100)}% match
+                                                {bid.freelancer?.avgRating > 0 ? ` · ${bid.freelancer.avgRating.toFixed(1)}/5` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group" style={{ minWidth: 220, flex: 1 }}>
+                                    <label>Standby freelancer (optional)</label>
+                                    <select
+                                        className="form-select"
+                                        value={standbyBidId}
+                                        onChange={(e) => setStandbyBidId(e.target.value)}
+                                    >
+                                        <option value="">No standby</option>
+                                        {task.bids.map((bid, index) => (
+                                            <option key={bid.id} value={bid.id}>
+                                                {index === 1 ? '★ ' : ''}
+                                                {bid.freelancer?.name} — {Math.round(bid.smartScore * 100)}% match
+                                                {bid.freelancer?.avgRating > 0 ? ` · ${bid.freelancer.avgRating.toFixed(1)}/5` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <button
+                                className="btn btn-success btn-sm"
+                                type="button"
+                                onClick={handleAssignPrimaryAndStandby}
+                                style={{ marginTop: 8 }}
+                            >
+                                ✓ Assign Primary & Standby
+                            </button>
+                        </div>
+                    )}
+
+                    {isOwner && task.status === 'ASSIGNED' && task.bids.some(b => b.status === 'STANDBY') && (
+                        <div className="alert alert-success" style={{ marginBottom: 16 }}>
+                            You have a standby freelancer on this task. If the primary underperforms, you can{' '}
+                            <button
+                                type="button"
+                                className="btn btn-secondary btn-sm"
+                                onClick={handleStandbyTakeover}
+                                style={{ marginLeft: 4 }}
+                            >
+                                Promote Standby to Primary
+                            </button>
+                        </div>
+                    )}
                     {task.bids.map((bid, index) => (
                         <div key={bid.id} className={`bid-card ${index === 0 && task.bids.length > 1 ? 'recommended' : ''}`}>
                             {index === 0 && task.bids.length > 1 && (
@@ -226,10 +326,15 @@ export default function TaskDetail() {
                                 </div>
                             )}
                             <p className="bid-cover">{bid.coverLetter}</p>
-                            {isOwner && task.status === 'OPEN' && (
-                                <button className="btn btn-success btn-sm" onClick={() => handleAcceptBid(bid.id)}>
-                                    ✓ Accept This Bid
-                                </button>
+                            {bid.status === 'ACCEPTED' && (
+                                <span className="badge badge-accepted" style={{ marginTop: 8, display: 'inline-block' }}>
+                                    Primary
+                                </span>
+                            )}
+                            {bid.status === 'STANDBY' && (
+                                <span className="badge badge-pending" style={{ marginTop: 8, display: 'inline-block' }}>
+                                    Standby
+                                </span>
                             )}
                         </div>
                     ))}

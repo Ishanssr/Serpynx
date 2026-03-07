@@ -39,6 +39,29 @@ export class BidsController {
         return this.bidsService.acceptBid(bidId, req.user.id);
     }
 
+  @Post('tasks/:taskId/assign')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.CLIENT)
+  assignPrimaryAndStandby(
+    @Param('taskId') taskId: string,
+    @Request() req,
+    @Body() body: { primaryBidId: string; standbyBidId?: string },
+  ) {
+    return this.bidsService.assignPrimaryAndStandby(
+      taskId,
+      req.user.id,
+      body.primaryBidId,
+      body.standbyBidId,
+    );
+  }
+
+  @Post('tasks/:taskId/standby-takeover')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.CLIENT)
+  promoteStandby(@Param('taskId') taskId: string, @Request() req) {
+    return this.bidsService.promoteStandby(taskId, req.user.id);
+  }
+
     @Get('my-bids')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.FREELANCER)

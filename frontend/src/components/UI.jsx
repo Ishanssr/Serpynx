@@ -37,7 +37,8 @@ export function StatusBadge({ status }) {
         CANCELLED: 'badge-cancelled',
         PENDING: 'badge-pending',
         ACCEPTED: 'badge-accepted',
-        REJECTED: 'badge-rejected',
+    REJECTED: 'badge-rejected',
+    STANDBY: 'badge-pending',
     };
     const label = status.replace('_', ' ');
     return <span className={`badge ${statusMap[status] || ''}`}>{label}</span>;

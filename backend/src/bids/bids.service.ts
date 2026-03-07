@@ -112,7 +112,12 @@ export class BidsService {
             }),
             this.prisma.task.update({
                 where: { id: bid.taskId },
-                data: { status: 'ASSIGNED', assignedToId: bid.freelancerId },
+                data: {
+                    status: 'ASSIGNED',
+                    assignedToId: bid.freelancerId,
+                    primaryBidId: bid.id,
+                    standbyBidId: null,
+                },
             }),
         ]);
 
@@ -132,6 +137,148 @@ export class BidsService {
         }
 
         return { message: 'Bid accepted, task assigned', bidId, taskId: bid.taskId };
+    }
+
+    /**
+     * Assign a primary and optional standby freelancer for a task.
+     * Uses smart-score-ranked bids; all non-selected bids are rejected.
+     */
+    async assignPrimaryAndStandby(taskId: string, clientId: string, primaryBidId: string, standbyBidId?: string) {
+        if (standbyBidId && standbyBidId === primaryBidId) {
+            throw new BadRequestException('Primary and standby freelancers must be different');
+        }
+
+        const task = await this.prisma.task.findUnique({
+            where: { id: taskId },
+            include: { bids: true },
+        });
+        if (!task) throw new NotFoundException('Task not found');
+        if (task.clientId !== clientId) throw new ForbiddenException('Not your task');
+        if (task.status !== 'OPEN') throw new BadRequestException('Task is not open');
+
+        const primaryBid = task.bids.find(b => b.id === primaryBidId);
+        if (!primaryBid) throw new NotFoundException('Primary bid not found for this task');
+
+        let standbyBid = null;
+        if (standbyBidId) {
+            standbyBid = task.bids.find(b => b.id === standbyBidId);
+            if (!standbyBid) throw new NotFoundException('Standby bid not found for this task');
+        }
+
+        const rejectIds = task.bids
+            .filter(b => b.id !== primaryBidId && (!standbyBidId || b.id !== standbyBidId))
+            .map(b => b.id);
+
+        await this.prisma.$transaction([
+            this.prisma.bid.update({
+                where: { id: primaryBidId },
+                data: { status: 'ACCEPTED' },
+            }),
+            ...(standbyBidId ? [
+                this.prisma.bid.update({
+                    where: { id: standbyBidId },
+                    data: { status: 'STANDBY' },
+                }),
+            ] : []),
+            ...(rejectIds.length > 0 ? [
+                this.prisma.bid.updateMany({
+                    where: { id: { in: rejectIds } },
+                    data: { status: 'REJECTED' },
+                }),
+            ] : []),
+            this.prisma.task.update({
+                where: { id: taskId },
+                data: {
+                    status: 'ASSIGNED',
+                    assignedToId: primaryBid.freelancerId,
+                    primaryBidId,
+                    standbyBidId: standbyBidId || null,
+                },
+            }),
+        ]);
+
+        // Notify primary
+        await this.notificationsService.notifyBidAccepted(
+            primaryBid.freelancerId, taskId, task.title,
+        );
+        await this.notificationsService.notifyTaskAssigned(
+            primaryBid.freelancerId, taskId, task.title,
+        );
+
+        // Notify standby, if any
+        if (standbyBid) {
+            await this.notificationsService.notifyStandbyAssigned(
+                standbyBid.freelancerId, taskId, task.title,
+            );
+        }
+
+        // Notify rejected bidders
+        for (const bid of task.bids) {
+            if (bid.id === primaryBidId || (standbyBidId && bid.id === standbyBidId)) continue;
+            await this.notificationsService.notifyBidRejected(
+                bid.freelancerId, taskId, task.title,
+            );
+        }
+
+        return {
+            message: 'Primary and standby freelancers assigned',
+            taskId,
+            primaryBidId,
+            standbyBidId: standbyBidId || null,
+        };
+    }
+
+    /**
+     * Promote the standby freelancer to primary if the current assignee underperforms.
+     * This is a manual trigger by the client and reassigns the task without re-opening bids.
+     */
+    async promoteStandby(taskId: string, clientId: string) {
+        const task = await this.prisma.task.findUnique({
+            where: { id: taskId },
+            include: { bids: true },
+        });
+        if (!task) throw new NotFoundException('Task not found');
+        if (task.clientId !== clientId) throw new ForbiddenException('Not your task');
+        if (task.status !== 'ASSIGNED') throw new BadRequestException('Task is not currently assigned');
+
+        const primaryBid = task.bids.find(b => b.status === 'ACCEPTED');
+        const standbyBid = task.bids.find(b => b.status === 'STANDBY');
+
+        if (!standbyBid) {
+            throw new BadRequestException('No standby freelancer configured for this task');
+        }
+        if (!primaryBid) {
+            throw new BadRequestException('No primary freelancer found for this task');
+        }
+
+        await this.prisma.$transaction([
+            this.prisma.bid.update({
+                where: { id: primaryBid.id },
+                data: { status: 'REJECTED' },
+            }),
+            this.prisma.bid.update({
+                where: { id: standbyBid.id },
+                data: { status: 'ACCEPTED' },
+            }),
+            this.prisma.task.update({
+                where: { id: taskId },
+                data: {
+                    assignedToId: standbyBid.freelancerId,
+                    primaryBidId: standbyBid.id,
+                    standbyBidId: null,
+                },
+            }),
+        ]);
+
+        await this.notificationsService.notifyStandbyPromoted(
+            standbyBid.freelancerId, taskId, task.title,
+        );
+
+        return {
+            message: 'Standby freelancer promoted to primary',
+            taskId,
+            newPrimaryBidId: standbyBid.id,
+        };
     }
 
     async getFreelancerBids(freelancerId: string, page = 1, limit = 20) {
