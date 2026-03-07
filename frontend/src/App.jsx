@@ -17,6 +17,7 @@ import Freelancers from './pages/Freelancers';
 import PublicProfile from './pages/PublicProfile';
 import Teams from './pages/Teams';
 import TeamDetail from './pages/TeamDetail';
+import Chat from './pages/Chat';
 import { Loading } from './components/UI';
 
 function ProtectedRoute({ children }) {
@@ -50,6 +51,8 @@ function AppRoutes() {
             <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
             <Route path="/teams/:id" element={<ProtectedRoute><TeamDetail /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path="/chat/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="*" element={<HomePage />} />
         </Routes>
     );

@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getPublicProfile } from '../api/client';
+import { useAuth } from '../context/AuthContext';
+import { getPublicProfile, getConnectionStatus, sendChatRequest } from '../api/client';
 import { StarRating, SkillTags, Loading } from '../components/UI';
 
 export default function PublicProfile() {
     const { id } = useParams();
+    const { user } = useAuth();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [connection, setConnection] = useState(null);
+    const [connectLoading, setConnectLoading] = useState(false);
+    const [connectError, setConnectError] = useState('');
 
     useEffect(() => {
         getPublicProfile(id)
@@ -15,6 +20,31 @@ export default function PublicProfile() {
             .catch((err) => setError(err.response?.data?.message || 'User not found'))
             .finally(() => setLoading(false));
     }, [id]);
+
+    useEffect(() => {
+        if (!id || !user || user.id === id) return;
+
+        getConnectionStatus(id)
+            .then((res) => setConnection(res.data))
+            .catch(() => {
+                // Ignore connection status errors to avoid blocking profile view
+            });
+    }, [id, user]);
+
+    const handleConnect = async () => {
+        if (!id) return;
+        setConnectError('');
+        setConnectLoading(true);
+        try {
+            await sendChatRequest({ receiverId: id });
+            const res = await getConnectionStatus(id);
+            setConnection(res.data);
+        } catch (err) {
+            setConnectError(err?.response?.data?.message || 'Failed to send connection request');
+        } finally {
+            setConnectLoading(false);
+        }
+    };
 
     if (loading) return <Loading />;
     if (error) return (
@@ -26,6 +56,7 @@ export default function PublicProfile() {
     if (!profile) return null;
 
     const isFreelancer = profile.role === 'FREELANCER';
+    const isOwnProfile = user?.id === profile.id;
 
     return (
         <div>
@@ -55,6 +86,38 @@ export default function PublicProfile() {
                             </span>
                         </div>
                     </div>
+
+                    {!isOwnProfile && (
+                        <div style={{ marginBottom: 16 }}>
+                            {connection?.status === 'ACCEPTED' ? (
+                                <Link to="/chat" className="connect-btn connected">
+                                    <span>Message</span>
+                                </Link>
+                            ) : connection?.status === 'PENDING' ? (
+                                <button
+                                    type="button"
+                                    className={`connect-btn ${connection.direction === 'SENT' ? 'pending' : ''}`}
+                                    disabled
+                                >
+                                    {connection.direction === 'SENT' ? 'Request pending' : 'Request received'}
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    className="connect-btn"
+                                    onClick={handleConnect}
+                                    disabled={connectLoading}
+                                >
+                                    {connectLoading ? 'Sending...' : 'Connect'}
+                                </button>
+                            )}
+                            {connectError && (
+                                <div className="alert alert-error" style={{ marginTop: 8 }}>
+                                    {connectError}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {isFreelancer && profile.avgRating > 0 && (
                         <div style={{ marginBottom: 16 }}>

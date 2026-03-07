@@ -33,6 +33,11 @@ export default function Layout({ children }) {
                             <span className="nav-icon">◇</span> Browse Tasks
                         </NavLink>
                     </li>
+                    <li>
+                        <NavLink to="/chat" className={({ isActive }) => isActive ? 'active' : ''}>
+                            <span className="nav-icon">✉</span> Messages
+                        </NavLink>
+                    </li>
                     {isClient && (
                         <>
                             <li>

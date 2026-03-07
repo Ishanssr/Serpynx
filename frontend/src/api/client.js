@@ -69,4 +69,14 @@ export const inviteToTeam = (teamId, data) => api.post(`/api/teams/${teamId}/inv
 export const leaveTeam = (teamId) => api.post(`/api/teams/${teamId}/leave`);
 export const removeTeamMember = (teamId, memberId) => api.delete(`/api/teams/${teamId}/members/${memberId}`);
 
+// Chat
+export const sendChatRequest = (data) => api.post('/api/chat/request', data);
+export const getChatRequests = () => api.get('/api/chat/requests');
+export const acceptChatRequest = (id) => api.post(`/api/chat/request/${id}/accept`);
+export const rejectChatRequest = (id) => api.post(`/api/chat/request/${id}/reject`);
+export const getConversations = () => api.get('/api/chat/conversations');
+export const getMessages = (conversationId, page) => api.get(`/api/chat/conversations/${conversationId}/messages`, { params: { page } });
+export const sendMessageRest = (conversationId, data) => api.post(`/api/chat/conversations/${conversationId}/messages`, data);
+export const getConnectionStatus = (userId) => api.get(`/api/chat/status/${userId}`);
+
 export default api;

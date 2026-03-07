@@ -13,6 +13,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { UsersModule } from './users/users.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { TeamsModule } from './teams/teams.module';
+import { ChatModule } from './chat/chat.module';
 import { HealthController } from './common/health.controller';
 
 @Module({
@@ -33,6 +34,7 @@ import { HealthController } from './common/health.controller';
     UsersModule,
     UploadsModule,
     TeamsModule,
+    ChatModule,
   ],
   controllers: [HealthController],
   providers: [
