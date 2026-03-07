@@ -30,7 +30,7 @@ export class ErrorBoundary extends React.Component {
                     color: 'var(--text-primary, #e0e0e0)',
                 }}>
                     <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>
-                        ⚡ Something went wrong
+                        ◈ Something went wrong
                     </h1>
                     <p style={{ color: 'var(--text-secondary, #999)', marginBottom: '2rem', maxWidth: '400px' }}>
                         An unexpected error occurred. Please try refreshing the page.

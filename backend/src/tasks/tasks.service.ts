@@ -80,6 +80,7 @@ export class TasksService {
                         freelancer: {
                             select: { id: true, name: true, skills: true, avgRating: true, totalReviews: true },
                         },
+                        team: { select: { id: true, name: true } },
                     },
                     orderBy: { smartScore: 'desc' },
                 },
@@ -87,7 +88,7 @@ export class TasksService {
                 review: true,
             },
         });
-        if (!task) throw new NotFoundException('Task not found');
+        if (!task || task.deletedAt) throw new NotFoundException('Task not found');
         return task;
     }
 

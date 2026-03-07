@@ -199,7 +199,7 @@ export default function TaskDetail() {
                     {task.bids.map((bid, index) => (
                         <div key={bid.id} className={`bid-card ${index === 0 && task.bids.length > 1 ? 'recommended' : ''}`}>
                             {index === 0 && task.bids.length > 1 && (
-                                <span className="badge badge-recommended" style={{ marginBottom: 8, display: 'inline-block' }}>⚡ Recommended</span>
+                                <span className="badge badge-recommended" style={{ marginBottom: 8, display: 'inline-block' }}>◈ Recommended</span>
                             )}
                             <div className="bid-header">
                                 <div>

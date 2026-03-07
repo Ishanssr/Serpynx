@@ -151,9 +151,10 @@ a:hover {
 }
 
 .landing-logo {
+  font-family: 'Cinzel Decorative', serif;
   font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
   color: #fff;
 }
 
@@ -494,11 +495,20 @@ a:hover {
 }
 
 .sidebar-logo {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
   color: #fff;
   margin-bottom: 8px;
-  letter-spacing: -0.5px;
+  letter-spacing: 1px;
+}
+
+.nav-icon {
+  display: inline-block;
+  width: 20px;
+  text-align: center;
+  font-weight: 300;
+  opacity: 0.7;
 }
 
 .sidebar-subtitle {

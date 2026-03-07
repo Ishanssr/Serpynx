@@ -11,17 +11,17 @@ const taglines = [
 
 const features = [
     {
-        icon: "⚡",
+        icon: "◈",
         title: "Smart Matching",
         desc: "Our algorithm matches your project with the best-fit developers based on skills, ratings, and past work.",
     },
     {
-        icon: "🔒",
+        icon: "◇",
         title: "Secure & Transparent",
         desc: "Verified profiles, secure authentication, and transparent bidding ensure trust at every step.",
     },
     {
-        icon: "🚀",
+        icon: "◎",
         title: "Ship Faster",
         desc: "Post a task, receive bids in minutes, and get your project completed by top developers worldwide.",
     },
@@ -126,7 +126,7 @@ export default function HomePage() {
             {/* Navigation */}
             <nav className="landing-nav">
                 <div className="landing-nav-inner">
-                    <div className="landing-logo">⚡ Serpynx</div>
+                    <div className="landing-logo">Serpynx</div>
                     <div className="landing-nav-links">
                         {user ? (
                             <Link to="/dashboard" className="btn btn-primary">Dashboard</Link>
@@ -223,7 +223,7 @@ export default function HomePage() {
             {/* Footer */}
             <footer className="landing-footer">
                 <div className="landing-footer-inner">
-                    <span>⚡ Serpynx</span>
+                    <span>Serpynx</span>
                     <span>© 2026. Built for developers, by developers.</span>
                 </div>
             </footer>

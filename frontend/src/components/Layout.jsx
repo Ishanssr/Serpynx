@@ -19,30 +19,30 @@ export default function Layout({ children }) {
     return (
         <div className="app-layout">
             <aside className="sidebar">
-                <div className="sidebar-logo">⚡ Serpynx</div>
+                <div className="sidebar-logo">Serpynx</div>
                 <div className="sidebar-subtitle">Smart Freelance Marketplace</div>
 
                 <ul className="sidebar-nav">
                     <li>
                         <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>
-                            📊 Dashboard
+                            <span className="nav-icon">◈</span> Dashboard
                         </NavLink>
                     </li>
                     <li>
                         <NavLink to="/tasks" className={({ isActive }) => isActive ? 'active' : ''}>
-                            📋 Browse Tasks
+                            <span className="nav-icon">◇</span> Browse Tasks
                         </NavLink>
                     </li>
                     {isClient && (
                         <>
                             <li>
                                 <NavLink to="/freelancers" className={({ isActive }) => isActive ? 'active' : ''}>
-                                    🔍 Find Freelancers
+                                    <span className="nav-icon">◎</span> Find Freelancers
                                 </NavLink>
                             </li>
                             <li>
                                 <NavLink to="/tasks/new" className={({ isActive }) => isActive ? 'active' : ''}>
-                                    ➕ Post Task
+                                    <span className="nav-icon">+</span> Post Task
                                 </NavLink>
                             </li>
                         </>
@@ -51,24 +51,24 @@ export default function Layout({ children }) {
                         <>
                             <li>
                                 <NavLink to="/freelancers" className={({ isActive }) => isActive ? 'active' : ''}>
-                                    👥 Community
+                                    <span className="nav-icon">◆</span> Community
                                 </NavLink>
                             </li>
                             <li>
                                 <NavLink to="/teams" className={({ isActive }) => isActive ? 'active' : ''}>
-                                    🤝 My Teams
+                                    <span className="nav-icon">⬡</span> My Teams
                                 </NavLink>
                             </li>
                             <li>
                                 <NavLink to="/my-bids" className={({ isActive }) => isActive ? 'active' : ''}>
-                                    🎯 My Bids
+                                    <span className="nav-icon">◈</span> My Bids
                                 </NavLink>
                             </li>
                         </>
                     )}
                     <li>
                         <NavLink to="/profile" className={({ isActive }) => isActive ? 'active' : ''}>
-                            👤 Profile
+                            <span className="nav-icon">○</span> Profile
                         </NavLink>
                     </li>
                 </ul>
@@ -87,7 +87,7 @@ export default function Layout({ children }) {
                     <div />
                     <div className="top-bar-actions">
                         <button onClick={toggleTheme} className="theme-toggle" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
-                            {theme === 'dark' ? '☀️' : '🌙'}
+                            {theme === 'dark' ? '○' : '●'}
                         </button>
                         <NotificationBell />
                     </div>
