@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -14,6 +15,8 @@ import Profile from './pages/Profile';
 import VerifyEmail from './pages/VerifyEmail';
 import Freelancers from './pages/Freelancers';
 import PublicProfile from './pages/PublicProfile';
+import Teams from './pages/Teams';
+import TeamDetail from './pages/TeamDetail';
 import { Loading } from './components/UI';
 
 function ProtectedRoute({ children }) {
@@ -44,6 +47,8 @@ function AppRoutes() {
             <Route path="/tasks/new" element={<ProtectedRoute><CreateTask /></ProtectedRoute>} />
             <Route path="/tasks/:id" element={<ProtectedRoute><TaskDetail /></ProtectedRoute>} />
             <Route path="/my-bids" element={<ProtectedRoute><MyBids /></ProtectedRoute>} />
+            <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
+            <Route path="/teams/:id" element={<ProtectedRoute><TeamDetail /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="*" element={<HomePage />} />
         </Routes>
@@ -53,11 +58,13 @@ function AppRoutes() {
 function App() {
     return (
         <ErrorBoundary>
-            <BrowserRouter>
-                <AuthProvider>
-                    <AppRoutes />
-                </AuthProvider>
-            </BrowserRouter>
+            <ThemeProvider>
+                <BrowserRouter>
+                    <AuthProvider>
+                        <AppRoutes />
+                    </AuthProvider>
+                </BrowserRouter>
+            </ThemeProvider>
         </ErrorBoundary>
     );
 }

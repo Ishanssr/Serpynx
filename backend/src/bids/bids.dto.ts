@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsInt, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsInt, Min, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateBidDto {
     @IsNumber()
@@ -12,4 +12,8 @@ export class CreateBidDto {
     @IsInt()
     @Min(1)
     estimatedDays: number;
+
+    @IsOptional()
+    @IsUUID()
+    teamId?: string;
 }

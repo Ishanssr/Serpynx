@@ -1,9 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import NotificationBell from './NotificationBell';
 
 export default function Layout({ children }) {
     const { user, logout } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -31,24 +33,38 @@ export default function Layout({ children }) {
                             📋 Browse Tasks
                         </NavLink>
                     </li>
-                    <li>
-                        <NavLink to="/freelancers" className={({ isActive }) => isActive ? 'active' : ''}>
-                            🔍 Find Freelancers
-                        </NavLink>
-                    </li>
                     {isClient && (
-                        <li>
-                            <NavLink to="/tasks/new" className={({ isActive }) => isActive ? 'active' : ''}>
-                                ➕ Post Task
-                            </NavLink>
-                        </li>
+                        <>
+                            <li>
+                                <NavLink to="/freelancers" className={({ isActive }) => isActive ? 'active' : ''}>
+                                    🔍 Find Freelancers
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink to="/tasks/new" className={({ isActive }) => isActive ? 'active' : ''}>
+                                    ➕ Post Task
+                                </NavLink>
+                            </li>
+                        </>
                     )}
                     {isFreelancer && (
-                        <li>
-                            <NavLink to="/my-bids" className={({ isActive }) => isActive ? 'active' : ''}>
-                                🎯 My Bids
-                            </NavLink>
-                        </li>
+                        <>
+                            <li>
+                                <NavLink to="/freelancers" className={({ isActive }) => isActive ? 'active' : ''}>
+                                    👥 Community
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink to="/teams" className={({ isActive }) => isActive ? 'active' : ''}>
+                                    🤝 My Teams
+                                </NavLink>
+                            </li>
+                            <li>
+                                <NavLink to="/my-bids" className={({ isActive }) => isActive ? 'active' : ''}>
+                                    🎯 My Bids
+                                </NavLink>
+                            </li>
+                        </>
                     )}
                     <li>
                         <NavLink to="/profile" className={({ isActive }) => isActive ? 'active' : ''}>
@@ -67,8 +83,14 @@ export default function Layout({ children }) {
             </aside>
 
             <main className="main-content">
-                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 0', marginBottom: 8 }}>
-                    <NotificationBell />
+                <div className="top-bar">
+                    <div />
+                    <div className="top-bar-actions">
+                        <button onClick={toggleTheme} className="theme-toggle" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+                            {theme === 'dark' ? '☀️' : '🌙'}
+                        </button>
+                        <NotificationBell />
+                    </div>
                 </div>
                 {children}
             </main>

@@ -35,6 +35,77 @@
   --transition: all 0.25s ease;
 }
 
+/* Light theme override */
+[data-theme="light"] {
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f3f5;
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-glow: rgba(0, 0, 0, 0.2);
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #888888;
+  --accent: #111111;
+  --accent-light: #333333;
+  --accent-dark: #000000;
+  --accent-gradient: linear-gradient(135deg, #111111, #555555);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 20px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .btn-primary {
+  background: #111;
+  color: #fff;
+}
+
+[data-theme="light"] .btn-primary:hover {
+  background: #333;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .landing-nav {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="light"] .hero-title,
+[data-theme="light"] .typewriter-text {
+  background: linear-gradient(135deg, #111, #555);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="light"] .typewriter-cursor {
+  -webkit-text-fill-color: #111;
+}
+
+[data-theme="light"] .landing-logo {
+  color: #111;
+}
+
+[data-theme="light"] .sidebar {
+  border-right-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .sidebar-nav a.active {
+  border-left-color: #111;
+}
+
+[data-theme="light"] .role-toggle button.active {
+  background: #111;
+  color: #fff;
+}
+
+[data-theme="light"] .badge-recommended {
+  background: #111;
+  color: #fff;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg-primary);
@@ -502,6 +573,40 @@ a:hover {
   flex: 1;
   padding: 32px 40px;
   min-height: 100vh;
+}
+
+/* Top bar */
+.top-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 8px 0;
+  margin-bottom: 8px;
+}
+
+.top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-toggle {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 1rem;
+}
+
+.theme-toggle:hover {
+  border-color: var(--border-glow);
+  transform: scale(1.1);
 }
 
 /* ======== AUTH ======== */

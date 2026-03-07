@@ -12,6 +12,7 @@ import { MatchingModule } from './matching/matching.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { UsersModule } from './users/users.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { TeamsModule } from './teams/teams.module';
 import { HealthController } from './common/health.controller';
 
 @Module({
@@ -31,6 +32,7 @@ import { HealthController } from './common/health.controller';
     NotificationsModule,
     UsersModule,
     UploadsModule,
+    TeamsModule,
   ],
   controllers: [HealthController],
   providers: [

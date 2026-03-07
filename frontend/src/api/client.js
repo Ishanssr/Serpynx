@@ -61,4 +61,12 @@ export const markAllNotificationsRead = () => api.patch('/api/notifications/read
 export const searchFreelancers = (params) => api.get('/api/users/freelancers', { params });
 export const getPublicProfile = (userId) => api.get(`/api/users/${userId}`);
 
+// Teams
+export const createTeam = (data) => api.post('/api/teams', data);
+export const getMyTeams = () => api.get('/api/teams/my');
+export const getTeam = (id) => api.get(`/api/teams/${id}`);
+export const inviteToTeam = (teamId, data) => api.post(`/api/teams/${teamId}/invite`, data);
+export const leaveTeam = (teamId) => api.post(`/api/teams/${teamId}/leave`);
+export const removeTeamMember = (teamId, memberId) => api.delete(`/api/teams/${teamId}/members/${memberId}`);
+
 export default api;

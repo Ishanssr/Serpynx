@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getTask, createBid, acceptBid, submitWork, createReview } from '../api/client';
+import { getTask, createBid, acceptBid, submitWork, createReview, getMyTeams } from '../api/client';
 import { ScoreBar, StarRating, StatusBadge, SkillTags, Loading } from '../components/UI';
 
 export default function TaskDetail() {
@@ -10,12 +10,13 @@ export default function TaskDetail() {
     const navigate = useNavigate();
     const [task, setTask] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [bidForm, setBidForm] = useState({ amount: '', coverLetter: '', estimatedDays: '' });
+    const [bidForm, setBidForm] = useState({ amount: '', coverLetter: '', estimatedDays: '', teamId: '' });
     const [submitForm, setSubmitForm] = useState({ content: '', link: '' });
     const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [showBidForm, setShowBidForm] = useState(false);
+    const [myTeams, setMyTeams] = useState([]);
 
     const fetchTask = async () => {
         try {
@@ -28,7 +29,12 @@ export default function TaskDetail() {
         }
     };
 
-    useEffect(() => { fetchTask(); }, [id]);
+    useEffect(() => {
+        fetchTask();
+        if (user?.role === 'FREELANCER') {
+            getMyTeams().then(res => setMyTeams(Array.isArray(res.data) ? res.data : [])).catch(() => { });
+        }
+    }, [id]);
 
     if (loading) return <Loading />;
     if (!task) return <div className="empty-state"><h3>Task not found</h3></div>;
@@ -42,11 +48,13 @@ export default function TaskDetail() {
         e.preventDefault();
         setError(''); setSuccess('');
         try {
-            await createBid(id, {
+            const bidData = {
                 amount: Number(bidForm.amount),
                 coverLetter: bidForm.coverLetter,
                 estimatedDays: Number(bidForm.estimatedDays),
-            });
+            };
+            if (bidForm.teamId) bidData.teamId = bidForm.teamId;
+            await createBid(id, bidData);
             setSuccess('Bid placed successfully!');
             setShowBidForm(false);
             fetchTask();
@@ -158,6 +166,18 @@ export default function TaskDetail() {
                                         onChange={(e) => setBidForm({ ...bidForm, coverLetter: e.target.value })}
                                         required placeholder="Why are you the best fit for this task?" rows={4} />
                                 </div>
+                                {myTeams.length > 0 && (
+                                    <div className="form-group">
+                                        <label>Bid as Team (optional)</label>
+                                        <select className="form-select" value={bidForm.teamId}
+                                            onChange={(e) => setBidForm({ ...bidForm, teamId: e.target.value })}>
+                                            <option value="">Solo Bid</option>
+                                            {myTeams.map(t => (
+                                                <option key={t.id} value={t.id}>🤝 {t.name} ({t._count?.members || t.members?.length} members)</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                                 <div style={{ display: 'flex', gap: 12 }}>
                                     <button className="btn btn-primary" type="submit">Submit Bid</button>
                                     <button className="btn btn-secondary" type="button" onClick={() => setShowBidForm(false)}>Cancel</button>
@@ -183,7 +203,10 @@ export default function TaskDetail() {
                             )}
                             <div className="bid-header">
                                 <div>
-                                    <div className="bid-freelancer">{bid.freelancer?.name}</div>
+                                    <div className="bid-freelancer">
+                                        {bid.freelancer?.name}
+                                        {bid.team && <span className="badge badge-open" style={{ marginLeft: 8 }}>🤝 {bid.team.name}</span>}
+                                    </div>
                                     <div style={{ marginTop: 4 }}>
                                         <SkillTags skills={bid.freelancer?.skills} />
                                     </div>

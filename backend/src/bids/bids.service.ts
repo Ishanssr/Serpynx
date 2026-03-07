@@ -36,6 +36,7 @@ export class BidsService {
                 estimatedDays: dto.estimatedDays,
                 freelancerId,
                 taskId,
+                ...(dto.teamId && { teamId: dto.teamId }),
             },
             include: {
                 freelancer: { select: { id: true, name: true, skills: true, avgRating: true } },
@@ -65,6 +66,7 @@ export class BidsService {
                     freelancer: {
                         select: { id: true, name: true, skills: true, avgRating: true, totalReviews: true },
                     },
+                    team: { select: { id: true, name: true } },
                 },
                 orderBy: { smartScore: 'desc' },
                 skip,
@@ -142,6 +144,7 @@ export class BidsService {
                     task: {
                         select: { id: true, title: true, budget: true, status: true, requiredSkills: true },
                     },
+                    team: { select: { id: true, name: true } },
                 },
                 orderBy: { createdAt: 'desc' },
                 skip,

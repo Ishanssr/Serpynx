@@ -27,6 +27,11 @@ enum BidStatus {
   REJECTED
 }
 
+enum TeamRole {
+  LEADER
+  MEMBER
+}
+
 model User {
   id                  String    @id @default(uuid())
   email               String    @unique
@@ -53,6 +58,8 @@ model User {
   reviewsGiven   Review[]     @relation("ReviewsGiven")
   reviewsReceived Review[]    @relation("ReviewsReceived")
   notifications  Notification[] @relation("UserNotifications")
+  teamsCreated   Team[]       @relation("TeamCreator")
+  teamMemberships TeamMember[] @relation("UserTeamMemberships")
 
   @@index([role])
 }
@@ -95,6 +102,8 @@ model Bid {
   freelancer     User      @relation("FreelancerBids", fields: [freelancerId], references: [id])
   taskId         String
   task           Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  teamId         String?
+  team           Team?     @relation("TeamBids", fields: [teamId], references: [id])
 
   @@unique([freelancerId, taskId])
   @@index([taskId])
@@ -132,10 +141,10 @@ model Review {
 
 model Notification {
   id        String   @id @default(uuid())
-  type      String   // BID_RECEIVED, BID_ACCEPTED, BID_REJECTED, WORK_SUBMITTED, REVIEW_RECEIVED, TASK_ASSIGNED
+  type      String
   message   String
   isRead    Boolean  @default(false)
-  link      String?  // frontend route to navigate to, e.g. /tasks/xyz
+  link      String?
   createdAt DateTime @default(now())
 
   // Relations
@@ -144,4 +153,35 @@ model Notification {
 
   @@index([userId, isRead])
   @@index([userId, createdAt])
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  createdById String
+  createdBy   User         @relation("TeamCreator", fields: [createdById], references: [id])
+  members     TeamMember[] @relation("TeamMembers")
+  bids        Bid[]        @relation("TeamBids")
+
+  @@index([createdById])
+}
+
+model TeamMember {
+  id       String   @id @default(uuid())
+  role     TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  // Relations
+  teamId   String
+  team     Team     @relation("TeamMembers", fields: [teamId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation("UserTeamMemberships", fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+  @@index([userId])
 }
