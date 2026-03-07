@@ -159,10 +159,11 @@ export class BidsService {
         const primaryBid = task.bids.find(b => b.id === primaryBidId);
         if (!primaryBid) throw new NotFoundException('Primary bid not found for this task');
 
-        let standbyBid = null;
-        if (standbyBidId) {
-            standbyBid = task.bids.find(b => b.id === standbyBidId);
-            if (!standbyBid) throw new NotFoundException('Standby bid not found for this task');
+        const standbyBid = standbyBidId
+            ? task.bids.find(b => b.id === standbyBidId) ?? null
+            : null;
+        if (standbyBidId && !standbyBid) {
+            throw new NotFoundException('Standby bid not found for this task');
         }
 
         const rejectIds = task.bids
