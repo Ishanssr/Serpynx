@@ -90,7 +90,10 @@ export default function PublicProfile() {
                     {!isOwnProfile && (
                         <div style={{ marginBottom: 16 }}>
                             {connection?.status === 'ACCEPTED' ? (
-                                <Link to="/chat" className="connect-btn connected">
+                                <Link
+                                    to={connection.conversationId ? `/chat/${connection.conversationId}` : '/chat'}
+                                    className="connect-btn connected"
+                                >
                                     <span>Message</span>
                                 </Link>
                             ) : connection?.status === 'PENDING' ? (

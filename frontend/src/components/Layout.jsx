@@ -91,8 +91,13 @@ export default function Layout({ children }) {
                 <div className="top-bar">
                     <div />
                     <div className="top-bar-actions">
-                        <button onClick={toggleTheme} className="theme-toggle" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
-                            {theme === 'dark' ? '○' : '●'}
+                        <button
+                            onClick={toggleTheme}
+                            className="theme-toggle"
+                            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                        >
+                            {theme === 'dark' ? '☀' : '🌙'}
                         </button>
                         <NotificationBell />
                     </div>

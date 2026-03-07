@@ -74,6 +74,21 @@
   color: #5a5a5a;
 }
 
+[data-theme="light"] .landing-stat-value,
+[data-theme="light"] .feature-card h3,
+[data-theme="light"] .review-name,
+[data-theme="light"] .score-value,
+[data-theme="light"] .stat-value,
+[data-theme="light"] .card-title {
+  color: #1a1a1a !important;
+}
+
+[data-theme="light"] .landing-stat-label,
+[data-theme="light"] .review-text,
+[data-theme="light"] .card-meta {
+  color: #5a5a5a !important;
+}
+
 [data-theme="light"] .btn-primary {
   background: #1a1a1a;
   color: #fff;

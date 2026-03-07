@@ -195,15 +195,34 @@ export class ChatService {
 
     // Check connection status between two users
     async getConnectionStatus(userId: string, targetId: string) {
-        const request = await this.prisma.chatRequest.findFirst({
-            where: {
-                OR: [
-                    { senderId: userId, receiverId: targetId },
-                    { senderId: targetId, receiverId: userId },
-                ],
-            },
-        });
-        if (!request) return { status: 'NONE' };
-        return { status: request.status, requestId: request.id, direction: request.senderId === userId ? 'SENT' : 'RECEIVED' };
+        const [request, conversation] = await this.prisma.$transaction([
+            this.prisma.chatRequest.findFirst({
+                where: {
+                    OR: [
+                        { senderId: userId, receiverId: targetId },
+                        { senderId: targetId, receiverId: userId },
+                    ],
+                },
+            }),
+            this.prisma.conversation.findFirst({
+                where: {
+                    OR: [
+                        { user1Id: userId, user2Id: targetId },
+                        { user1Id: targetId, user2Id: userId },
+                    ],
+                },
+            }),
+        ]);
+
+        if (!request && !conversation) {
+            return { status: 'NONE' };
+        }
+
+        return {
+            status: request ? request.status : 'ACCEPTED',
+            requestId: request?.id ?? null,
+            direction: request ? (request.senderId === userId ? 'SENT' : 'RECEIVED') : null,
+            conversationId: conversation?.id ?? null,
+        };
     }
 }
