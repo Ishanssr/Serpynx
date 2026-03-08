@@ -17,9 +17,29 @@ export default function FreelancerDashboard() {
     try {
       console.log('Fetching assigned tasks...');
       const res = await getMyBids();
-      console.log('Bids response:', res.data);
+      console.log('Full response:', res);
+      console.log('Response data:', res.data);
+      console.log('Response type:', typeof res.data);
+      console.log('Is data array?', Array.isArray(res.data));
       
-      const tasks = res.data
+      // Ensure we have an array - handle different response structures
+      let bidsData = [];
+      if (Array.isArray(res.data)) {
+        bidsData = res.data;
+      } else if (res.data && Array.isArray(res.data.data)) {
+        // Handle nested data structure
+        bidsData = res.data.data;
+      } else if (res.data && res.data.bids && Array.isArray(res.data.bids)) {
+        // Handle bids wrapper
+        bidsData = res.data.bids;
+      } else {
+        console.warn('Unexpected response structure:', res.data);
+        bidsData = [];
+      }
+      
+      console.log('Processed bids data:', bidsData);
+      
+      const tasks = bidsData
         .filter(bid => {
           console.log('Checking bid:', bid.id, 'status:', bid.status, 'task status:', bid.task?.status);
           console.log('Task object:', bid.task);
@@ -56,6 +76,7 @@ export default function FreelancerDashboard() {
       }
     } catch (err) {
       console.error('Error fetching assigned tasks:', err);
+      console.error('Error details:', err.response?.data);
       setError(err.response?.data?.message || 'Failed to fetch assigned tasks');
     } finally {
       setLoading(false);
