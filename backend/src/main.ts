@@ -1,10 +1,22 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger, Controller, Get } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
+
+@Controller()
+class AppController {
+  @Get()
+  getRoot() {
+    return {
+      message: 'Serpynx API is running',
+      version: '1.0.0',
+      status: 'healthy'
+    };
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -21,6 +33,10 @@ async function bootstrap() {
   }
   if (process.env.FRONTEND_URL) {
     allowedOrigins.push(process.env.FRONTEND_URL);
+  }
+  // Add frontend URL for production
+  if (process.env.NODE_ENV === 'production') {
+    allowedOrigins.push('https://serpynx-frontend.onrender.com');
   }
   app.enableCors({
     origin: allowedOrigins,
