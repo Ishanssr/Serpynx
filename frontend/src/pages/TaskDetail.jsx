@@ -342,31 +342,42 @@ export default function TaskDetail() {
                 </div>
             )}
 
-            {/* Submit Work (Assigned freelancer) */}
-            {isAssigned && task.status === 'ASSIGNED' && !task.submission && (
+            {/* Show submission and work progress */}
+            {isAssigned && task.status === 'ASSIGNED' && (
                 <div className="detail-section">
-                    <div className="card">
-                        <h2 style={{ marginBottom: 16 }}>Submit Your Work</h2>
-                        <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label>Description of work done</label>
-                                <textarea className="form-textarea" value={submitForm.content}
-                                    onChange={(e) => setSubmitForm({ ...submitForm, content: e.target.value })}
-                                    required placeholder="Describe what you've built..." rows={4} />
-                            </div>
-                            <div className="form-group">
-                                <label>Link (GitHub, demo, etc.)</label>
-                                <input className="form-input" value={submitForm.link}
-                                    onChange={(e) => setSubmitForm({ ...submitForm, link: e.target.value })}
-                                    placeholder="https://github.com/..." />
-                            </div>
-                            <button className="btn btn-primary" type="submit">Submit Work</button>
-                        </form>
-                    </div>
+                    <h2>Work Progress</h2>
+                    
+                    {/* Work Progress Tracking - Show even before submission */}
+                    <WorkProgress taskId={task.id} user={user} />
+                    
+                    {/* Submit Work Form */}
+                    {!task.submission && (
+                        <div className="card" style={{ marginTop: 16 }}>
+                            <h3 style={{ marginBottom: 16 }}>Submit Initial Work</h3>
+                            <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
+                                Submit your initial work to automatically generate work parts for tracking progress.
+                            </p>
+                            <form onSubmit={handleSubmit}>
+                                <div className="form-group">
+                                    <label>Description of work done</label>
+                                    <textarea className="form-textarea" value={submitForm.content}
+                                        onChange={(e) => setSubmitForm({ ...submitForm, content: e.target.value })}
+                                        required placeholder="Describe what you've built..." rows={4} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Link (GitHub, demo, etc.)</label>
+                                    <input className="form-input" value={submitForm.link}
+                                        onChange={(e) => setSubmitForm({ ...submitForm, link: e.target.value })}
+                                        placeholder="https://github.com/..." />
+                                </div>
+                                <button className="btn btn-primary" type="submit">Submit Work & Create Work Parts</button>
+                            </form>
+                        </div>
+                    )}
                 </div>
             )}
 
-            {/* Show submission and work progress */}
+            {/* Show existing submission and work progress */}
             {task.submission && (
                 <div className="detail-section">
                     <h2>Work Progress & Submission</h2>

@@ -97,6 +97,42 @@ export default function WorkProgress({ taskId, user }) {
   const totalParts = workParts.length;
   const progressPercentage = totalParts > 0 ? (completedParts / totalParts) * 100 : 0;
 
+  // Show message when no work parts exist yet
+  if (workParts.length === 0) {
+    return (
+      <div className="work-progress">
+        {error && <div className="alert alert-error">{error}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
+
+        <div className="card">
+          <h3 style={{ marginBottom: 16 }}>Work Parts Not Yet Created</h3>
+          <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
+            {isFreelancer 
+              ? "Submit your initial work below to automatically generate work parts for tracking progress."
+              : "Work parts will be created once the freelancer submits their initial work."
+            }
+          </p>
+          {isFreelancer && (
+            <div style={{ 
+              padding: 12, 
+              backgroundColor: 'var(--bg-card-hover)', 
+              borderRadius: 6,
+              border: '1px solid var(--border-color)'
+            }}>
+              <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Next Steps:</h4>
+              <ol style={{ margin: 0, paddingLeft: 20, color: 'var(--text-secondary)' }}>
+                <li>Submit your initial work using the form below</li>
+                <li>Work parts will be automatically generated</li>
+                <li>Update each part individually with progress</li>
+                <li>Client can review and approve each part</li>
+              </ol>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="work-progress">
       {error && <div className="alert alert-error">{error}</div>}
