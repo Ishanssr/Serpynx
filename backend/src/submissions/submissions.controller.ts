@@ -26,12 +26,6 @@ export class SubmissionsController {
     getSubmission(@Param('taskId') taskId: string) {
         return this.submissionsService.getSubmission(taskId);
     }
-
-    @Get('work-parts')
-    @UseGuards(AuthGuard('jwt'))
-    getWorkParts(@Param('taskId') taskId: string, @Request() req) {
-        return this.submissionsService.getWorkParts(taskId, req.user.id);
-    }
 }
 
 @Controller('api/work-parts/:workPartId')
