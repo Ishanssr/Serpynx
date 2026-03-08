@@ -57,6 +57,35 @@
   --shadow-glow: 0 0 20px rgba(120, 100, 70, 0.06);
 }
 
+/* Work Progress specific fixes */
+[data-theme="light"] .work-progress h3,
+[data-theme="light"] .work-progress h4,
+[data-theme="light"] .work-progress h5,
+[data-theme="light"] .work-progress p,
+[data-theme="light"] .work-progress div,
+[data-theme="light"] .work-progress span,
+[data-theme="light"] .work-progress li,
+[data-theme="light"] .work-progress *,
+[data-theme="light"] .work-progress * {
+  color: #000000 !important;
+}
+
+[data-theme="light"] .work-progress .card {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .work-progress .btn-primary {
+  background: #000000;
+  color: #ffffff;
+}
+
+[data-theme="light"] .work-progress .btn-secondary {
+  background: #f8f9fa;
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
 /* Light theme — ensure ALL headings/text are visible */
 [data-theme="light"] h1,
 [data-theme="light"] h2,
