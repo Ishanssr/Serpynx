@@ -108,25 +108,33 @@ export default function WorkProgress({ taskId, user }) {
           <h3 style={{ marginBottom: 16 }}>Work Parts Not Yet Created</h3>
           <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
             {isFreelancer 
-              ? "Work parts will be available once you start working on this task."
+              ? "Work parts are needed to track your progress. Click the button below to create them now."
               : "Work parts will be visible once the freelancer starts working."
             }
           </p>
           {isFreelancer && (
-            <div style={{ 
-              padding: 12, 
-              backgroundColor: 'var(--bg-card-hover)', 
-              borderRadius: 6,
-              border: '1px solid var(--border-color)'
-            }}>
-              <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Next Steps:</h4>
-              <ol style={{ margin: 0, paddingLeft: 20, color: 'var(--text-secondary)' }}>
-                <li>Click "Start Work" to begin the first part</li>
-                <li>Upload files and update progress for each part</li>
-                <li>Submit each part for client review</li>
-                <li>Client can approve or request revisions</li>
-              </ol>
-            </div>
+            <button 
+              className="btn btn-primary"
+              onClick={async () => {
+                try {
+                  setError('');
+                  setSuccess('');
+                  const res = await fetch(`/api/tasks/${taskId}/create-work-parts`, {
+                    headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                  });
+                  const data = await res.json();
+                  setSuccess(data.message || 'Work parts created successfully!');
+                  setTimeout(() => window.location.reload(), 2000);
+                } catch (err) {
+                  setError('Failed to create work parts');
+                }
+              }}
+              style={{ marginBottom: 16 }}
+            >
+              Create Work Parts Now
+            </button>
           )}
         </div>
       </div>
