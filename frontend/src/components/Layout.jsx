@@ -14,9 +14,17 @@ export default function Layout({ children }) {
     };
 
     const handleRoleSwitch = () => {
+        console.log('Current role:', user?.role);
         const newRole = user?.role === 'CLIENT' ? 'FREELANCER' : 'CLIENT';
-        updateUser({ ...user, role: newRole });
-        navigate('/');
+        console.log('Switching to:', newRole);
+        
+        // Update user in context and localStorage
+        const updatedUser = { ...user, role: newRole };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        updateUser(updatedUser);
+        
+        // Force page reload to apply changes
+        window.location.href = '/';
     };
 
     const isClient = user?.role === 'CLIENT';
