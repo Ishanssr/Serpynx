@@ -19,6 +19,7 @@ export class FilesService {
         const workPart = await this.prisma.workPart.findUnique({
             where: { id: workPartId },
             include: {
+                task: true,
                 submission: {
                     include: { task: true },
                 },
@@ -26,7 +27,24 @@ export class FilesService {
         });
 
         if (!workPart) throw new NotFoundException('Work part not found');
-        if (workPart.submission.freelancerId !== freelancerId) {
+        
+        // Check permissions - work part can be linked to task or submission
+        let hasPermission = false;
+        if (workPart.submission) {
+            hasPermission = workPart.submission.freelancerId === freelancerId;
+        } else if (workPart.task) {
+            // For task-linked work parts, check if the freelancer is assigned to the task
+            const assignedBid = await this.prisma.bid.findFirst({
+                where: {
+                    taskId: workPart.task.id,
+                    freelancerId: freelancerId,
+                    status: 'ACCEPTED'
+                }
+            });
+            hasPermission = !!assignedBid;
+        }
+        
+        if (!hasPermission) {
             throw new ForbiddenException('You are not assigned to this task');
         }
 
@@ -61,6 +79,7 @@ export class FilesService {
             include: {
                 workPart: {
                     include: {
+                        task: true,
                         submission: true,
                     },
                 },
@@ -68,7 +87,24 @@ export class FilesService {
         });
 
         if (!workFile) throw new NotFoundException('File not found');
-        if (workFile.workPart.submission.freelancerId !== freelancerId) {
+        
+        // Check permissions
+        let hasPermission = false;
+        if (workFile.workPart.submission) {
+            hasPermission = workFile.workPart.submission.freelancerId === freelancerId;
+        } else if (workFile.workPart.task) {
+            // For task-linked work parts, check if the freelancer is assigned to the task
+            const assignedBid = await this.prisma.bid.findFirst({
+                where: {
+                    taskId: workFile.workPart.task.id,
+                    freelancerId: freelancerId,
+                    status: 'ACCEPTED'
+                }
+            });
+            hasPermission = !!assignedBid;
+        }
+        
+        if (!hasPermission) {
             throw new ForbiddenException('You are not authorized to delete this file');
         }
 
@@ -86,6 +122,7 @@ export class FilesService {
         const workPart = await this.prisma.workPart.findUnique({
             where: { id: workPartId },
             include: {
+                task: true,
                 submission: {
                     include: { task: true },
                 },
@@ -96,8 +133,24 @@ export class FilesService {
         if (!workPart) throw new NotFoundException('Work part not found');
 
         // Check if user is either the client or the freelancer
-        const isClient = workPart.submission.task.clientId === userId;
-        const isFreelancer = workPart.submission.freelancerId === userId;
+        let isClient = false;
+        let isFreelancer = false;
+        
+        if (workPart.submission) {
+            isClient = workPart.submission.task.clientId === userId;
+            isFreelancer = workPart.submission.freelancerId === userId;
+        } else if (workPart.task) {
+            // For task-linked work parts, check if user is client or assigned freelancer
+            isClient = workPart.task.clientId === userId;
+            const assignedBid = await this.prisma.bid.findFirst({
+                where: {
+                    taskId: workPart.task.id,
+                    freelancerId: userId,
+                    status: 'ACCEPTED'
+                }
+            });
+            isFreelancer = !!assignedBid;
+        }
 
         if (!isClient && !isFreelancer) {
             throw new ForbiddenException('You are not authorized to view these files');

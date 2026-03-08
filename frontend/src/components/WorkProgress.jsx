@@ -108,8 +108,8 @@ export default function WorkProgress({ taskId, user }) {
           <h3 style={{ marginBottom: 16 }}>Work Parts Not Yet Created</h3>
           <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
             {isFreelancer 
-              ? "Submit your initial work below to automatically generate work parts for tracking progress."
-              : "Work parts will be created once the freelancer submits their initial work."
+              ? "Work parts will be available once you start working on this task."
+              : "Work parts will be visible once the freelancer starts working."
             }
           </p>
           {isFreelancer && (
@@ -121,10 +121,10 @@ export default function WorkProgress({ taskId, user }) {
             }}>
               <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Next Steps:</h4>
               <ol style={{ margin: 0, paddingLeft: 20, color: 'var(--text-secondary)' }}>
-                <li>Submit your initial work using the form below</li>
-                <li>Work parts will be automatically generated</li>
-                <li>Update each part individually with progress</li>
-                <li>Client can review and approve each part</li>
+                <li>Click "Start Work" to begin the first part</li>
+                <li>Upload files and update progress for each part</li>
+                <li>Submit each part for client review</li>
+                <li>Client can approve or request revisions</li>
               </ol>
             </div>
           )}

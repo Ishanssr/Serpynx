@@ -1,13 +1,18 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto, UpdateTaskDto, TaskQueryDto } from './tasks.dto';
+import { WorkBreakdownService } from '../work-breakdown/work-breakdown.service';
 
 @Injectable()
 export class TasksService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private workBreakdownService: WorkBreakdownService
+    ) { }
 
     async create(clientId: string, dto: CreateTaskDto) {
-        return this.prisma.task.create({
+        // Create the task first
+        const task = await this.prisma.task.create({
             data: {
                 title: dto.title,
                 description: dto.description,
@@ -19,6 +24,29 @@ export class TasksService {
                 client: { select: { id: true, name: true, email: true } },
             },
         });
+
+        // Immediately create work breakdown using AI
+        const workBreakdown = await this.workBreakdownService.breakDownWork(
+            task.title,
+            task.description,
+            task.requiredSkills
+        );
+
+        // Create work parts for the task
+        await this.prisma.$transaction(
+            workBreakdown.map(part =>
+                this.prisma.workPart.create({
+                    data: {
+                        partNumber: part.partNumber,
+                        title: part.title,
+                        description: part.description,
+                        taskId: task.id, // Link directly to task, not submission
+                    },
+                })
+            )
+        );
+
+        return task;
     }
 
     async findAll(query: TaskQueryDto) {

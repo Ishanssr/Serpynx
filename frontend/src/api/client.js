@@ -45,7 +45,7 @@ export const getWorkParts = (taskId) => api.get(`/api/tasks/${taskId}/work-parts
 export const updateWorkPart = (workPartId, data) => api.patch(`/api/work-parts/${workPartId}`, data);
 export const reviewWorkPart = (workPartId, data) => api.patch(`/api/work-parts/${workPartId}/review`, data);
 
-// Files
+// Files - Direct upload to work parts
 export const uploadWorkFile = (workPartId, file) => {
     const formData = new FormData();
     formData.append('file', file);

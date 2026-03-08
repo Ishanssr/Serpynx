@@ -44,24 +44,24 @@ export class SubmissionsService {
             },
         });
 
-        // Auto-generate work breakdown
-        const workBreakdown = await this.workBreakdownService.breakDownWork(
-            task.title,
-            task.description,
-            task.requiredSkills
-        );
+        // Auto-generate work breakdown - REMOVED since work parts are now created at task creation
+        // const workBreakdown = await this.workBreakdownService.breakDownWork(
+        //     task.title,
+        //     task.description,
+        //     task.requiredSkills
+        // );
 
-        // Create work parts
-        for (const part of workBreakdown) {
-            await this.prisma.workPart.create({
-                data: {
-                    partNumber: part.partNumber,
-                    title: part.title,
-                    description: part.description,
-                    submissionId: submission.id,
-                },
-            });
-        }
+        // Create work parts - REMOVED since they're created at task creation
+        // for (const part of workBreakdown) {
+        //     await this.prisma.workPart.create({
+        //         data: {
+        //             partNumber: part.partNumber,
+        //             title: part.title,
+        //             description: part.description,
+        //             submissionId: submission.id,
+        //         },
+        //     });
+        // }
 
         await this.prisma.task.update({
             where: { id: taskId },
@@ -97,6 +97,7 @@ export class SubmissionsService {
         const workPart = await this.prisma.workPart.findUnique({
             where: { id: workPartId },
             include: {
+                task: true,
                 submission: {
                     include: { task: true },
                 },
@@ -104,10 +105,32 @@ export class SubmissionsService {
         });
 
         if (!workPart) throw new NotFoundException('Work part not found');
-        if (workPart.submission.freelancerId !== freelancerId) {
+        
+        // Check permissions
+        let hasPermission = false;
+        let task: any = null;
+        
+        if (workPart.submission) {
+            hasPermission = workPart.submission.freelancerId === freelancerId;
+            task = workPart.submission.task;
+        } else if (workPart.task) {
+            // For task-linked work parts, check if the freelancer is assigned to the task
+            const assignedBid = await this.prisma.bid.findFirst({
+                where: {
+                    taskId: workPart.task.id,
+                    freelancerId: freelancerId,
+                    status: 'ACCEPTED'
+                }
+            });
+            hasPermission = !!assignedBid;
+            task = workPart.task;
+        }
+        
+        if (!hasPermission) {
             throw new ForbiddenException('You are not assigned to this task');
         }
-        if (workPart.submission.task.status !== 'ASSIGNED') {
+        
+        if (task && task.status !== 'ASSIGNED') {
             throw new BadRequestException('Task is not in assigned status');
         }
 
