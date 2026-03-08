@@ -153,4 +153,40 @@ export class TasksService {
             data: { deletedAt: new Date() },
         });
     }
+
+    async getWorkParts(taskId: string, userId: string) {
+        // Check if user has access to this task
+        const task = await this.prisma.task.findUnique({
+            where: { id: taskId },
+            select: { clientId: true }
+        });
+
+        if (!task) throw new NotFoundException('Task not found');
+
+        // Check if user is client or assigned freelancer
+        const isClient = task.clientId === userId;
+        const assignedBid = await this.prisma.bid.findFirst({
+            where: {
+                taskId,
+                freelancerId: userId,
+                status: 'ACCEPTED'
+            }
+        });
+        const isAssignedFreelancer = !!assignedBid;
+
+        if (!isClient && !isAssignedFreelancer) {
+            throw new ForbiddenException('You are not authorized to view work parts for this task');
+        }
+
+        // Get work parts linked directly to task
+        const workParts = await this.prisma.workPart.findMany({
+            where: { taskId },
+            include: {
+                files: true,
+            },
+            orderBy: { partNumber: 'asc' }
+        });
+
+        return workParts;
+    }
 }

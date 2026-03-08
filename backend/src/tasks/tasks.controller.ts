@@ -29,6 +29,12 @@ export class TasksController {
         return this.tasksService.findOne(id);
     }
 
+    @Get(':id/work-parts')
+    @UseGuards(AuthGuard('jwt'))
+    getWorkParts(@Param('id') id: string, @Request() req) {
+        return this.tasksService.getWorkParts(id, req.user.id);
+    }
+
     @Post()
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(Role.CLIENT)

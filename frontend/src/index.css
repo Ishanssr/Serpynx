@@ -71,12 +71,12 @@
 [data-theme="light"] .work-progress h3,
 [data-theme="light"] .work-progress h4,
 [data-theme="light"] .work-progress h5 {
-  color: #1a1a1a !important;
+  color: #000000 !important;
 }
 
 [data-theme="light"] .page-header p,
 [data-theme="light"] .sidebar-subtitle {
-  color: #4a4a4a;
+  color: #333333 !important;
 }
 
 [data-theme="light"] .landing-stat-value,
@@ -85,50 +85,50 @@
 [data-theme="light"] .score-value,
 [data-theme="light"] .stat-value,
 [data-theme="light"] .card-title {
-  color: #1a1a1a !important;
+  color: #000000 !important;
 }
 
 [data-theme="light"] .landing-stat-label,
 [data-theme="light"] .review-text,
 [data-theme="light"] .card-meta {
-  color: #4a4a4a !important;
+  color: #333333 !important;
 }
 
 [data-theme="light"] p,
 [data-theme="light"] span,
 [data-theme="light"] div {
-  color: #1a1a1a !important;
+  color: #000000 !important;
 }
 
 [data-theme="light"] .btn-primary {
-  background: #1a1a1a;
+  background: #000000;
   color: #fff;
 }
 
 [data-theme="light"] .btn-primary:hover {
-  background: #000;
+  background: #333333;
   color: #fff;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 [data-theme="light"] .btn-secondary {
   background: #faf9f7;
-  color: #1a1a1a;
-  border-color: rgba(120, 100, 80, 0.2);
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="light"] .card {
   background: #ffffff;
-  border-color: rgba(120, 100, 80, 0.06);
-  box-shadow: 0 1px 4px rgba(120, 100, 80, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="light"] .form-input,
 [data-theme="light"] .form-textarea,
 [data-theme="light"] .form-select {
   background: #ffffff;
-  color: #1a1a1a;
-  border-color: rgba(120, 100, 80, 0.06);
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="light"] .form-input::placeholder,
@@ -142,31 +142,31 @@
 
 [data-theme="light"] .hero-title,
 [data-theme="light"] .typewriter-text {
-  background: linear-gradient(135deg, #1a1a1a, #4a4a4a);
+  background: linear-gradient(135deg, #000000, #333333);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 [data-theme="light"] .typewriter-cursor {
-  -webkit-text-fill-color: #1a1a1a;
+  -webkit-text-fill-color: #000000;
 }
 
 [data-theme="light"] .landing-logo {
-  color: #1a1a1a;
+  color: #000000;
 }
 
 [data-theme="light"] .sidebar {
   background: #f5f3f0;
-  border-right-color: rgba(120, 100, 80, 0.06);
+  border-right-color: rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="light"] .sidebar-logo {
-  color: #1a1a1a;
+  color: #000000;
 }
 
 [data-theme="light"] .sidebar-nav a {
-  color: #4a4a4a;
+  color: #333333;
 }
 
 [data-theme="light"] .sidebar-nav a:hover {
