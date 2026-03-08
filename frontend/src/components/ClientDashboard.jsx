@@ -19,12 +19,12 @@ export default function ClientDashboard() {
       const res = await getMyTasks();
       console.log('Tasks response:', res.data);
       
-      const tasksWithSubmissions = res.data.filter(task => task.submission);
-      console.log('Tasks with submissions:', tasksWithSubmissions);
-      setTasks(tasksWithSubmissions);
+      const tasks = res.data.filter(task => task.status === 'ASSIGNED' || task.status === 'IN_REVIEW' || task.status === 'COMPLETED');
+      console.log('Filtered tasks:', tasks);
+      setTasks(tasks);
       
-      if (tasksWithSubmissions.length === 0) {
-        setError('No projects with work in progress found.');
+      if (tasks.length === 0) {
+        setError('No active projects found. Tasks will appear here once assigned to freelancers.');
       }
     } catch (err) {
       console.error('Error fetching tasks:', err);

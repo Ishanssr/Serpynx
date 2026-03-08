@@ -20,7 +20,10 @@ export default function FreelancerDashboard() {
       console.log('Bids response:', res.data);
       
       const tasks = res.data
-        .filter(bid => bid.status === 'ACCEPTED' && bid.task)
+        .filter(bid => {
+          console.log('Checking bid:', bid.id, 'status:', bid.status, 'task status:', bid.task?.status);
+          return bid.status === 'ACCEPTED' && bid.task && (bid.task.status === 'ASSIGNED' || bid.task.status === 'IN_REVIEW' || bid.task.status === 'COMPLETED');
+        })
         .map(bid => ({
           ...bid.task,
           bidAmount: bid.amount,
@@ -31,7 +34,7 @@ export default function FreelancerDashboard() {
       setAssignedTasks(tasks);
       
       if (tasks.length === 0) {
-        setError('No assigned tasks found. Make sure you have accepted bids.');
+        setError('No assigned tasks found. Make sure you have accepted bids and tasks have been assigned.');
       }
     } catch (err) {
       console.error('Error fetching assigned tasks:', err);
