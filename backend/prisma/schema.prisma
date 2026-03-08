@@ -125,6 +125,14 @@ model Bid {
   @@index([status])
 }
 
+enum WorkPartStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  REVISION_REQUIRED
+}
+
 model Submission {
   id             String   @id @default(uuid())
   content        String
@@ -136,6 +144,44 @@ model Submission {
   freelancer     User     @relation("FreelancerSubmissions", fields: [freelancerId], references: [id])
   taskId         String   @unique
   task           Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  workParts      WorkPart[]
+}
+
+model WorkPart {
+  id          String          @id @default(uuid())
+  partNumber  Int             // 1, 2, or 3
+  title       String
+  description String
+  status      WorkPartStatus  @default(NOT_STARTED)
+  content     String?         // Freelancer's update/content for this part
+  submittedAt DateTime?
+  reviewedAt  DateTime?
+  feedback    String?         // Client feedback if revision required
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relations
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  files        WorkFile[]
+
+  @@unique([submissionId, partNumber])
+}
+
+model WorkFile {
+  id           String   @id @default(uuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String
+  uploadedAt   DateTime @default(now())
+
+  // Relations
+  workPartId String
+  workPart   WorkPart @relation(fields: [workPartId], references: [id], onDelete: Cascade)
+
+  @@index([workPartId])
 }
 
 model Review {

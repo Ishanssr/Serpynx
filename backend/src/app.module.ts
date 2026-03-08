@@ -14,6 +14,7 @@ import { UsersModule } from './users/users.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { TeamsModule } from './teams/teams.module';
 import { ChatModule } from './chat/chat.module';
+import { FilesModule } from './files/files.module';
 import { HealthController } from './common/health.controller';
 
 @Module({
@@ -35,6 +36,7 @@ import { HealthController } from './common/health.controller';
     UploadsModule,
     TeamsModule,
     ChatModule,
+    FilesModule,
   ],
   controllers: [HealthController],
   providers: [

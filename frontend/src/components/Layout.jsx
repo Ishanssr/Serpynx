@@ -29,6 +29,11 @@ export default function Layout({ children }) {
                         </NavLink>
                     </li>
                     <li>
+                        <NavLink to="/work-progress" className={({ isActive }) => isActive ? 'active' : ''}>
+                            <span className="nav-icon">⚡</span> Work Progress
+                        </NavLink>
+                    </li>
+                    <li>
                         <NavLink to="/tasks" className={({ isActive }) => isActive ? 'active' : ''}>
                             <span className="nav-icon">◇</span> Browse Tasks
                         </NavLink>

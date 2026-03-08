@@ -41,6 +41,20 @@ export const getMyBids = () => api.get('/api/my-bids');
 // Submissions
 export const submitWork = (taskId, data) => api.post(`/api/tasks/${taskId}/submit`, data);
 export const getSubmission = (taskId) => api.get(`/api/tasks/${taskId}/submission`);
+export const getWorkParts = (taskId) => api.get(`/api/tasks/${taskId}/work-parts`);
+export const updateWorkPart = (workPartId, data) => api.patch(`/api/work-parts/${workPartId}`, data);
+export const reviewWorkPart = (workPartId, data) => api.patch(`/api/work-parts/${workPartId}/review`, data);
+
+// Files
+export const uploadWorkFile = (workPartId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/api/work-parts/${workPartId}/files`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+};
+export const getWorkFiles = (workPartId) => api.get(`/api/work-parts/${workPartId}/files`);
+export const deleteWorkFile = (workPartId, fileId) => api.delete(`/api/work-parts/${workPartId}/files/${fileId}`);
 
 // Reviews
 export const createReview = (taskId, data) => api.post(`/api/tasks/${taskId}/review`, data);

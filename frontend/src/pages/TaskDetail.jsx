@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getTask, createBid, assignPrimaryAndStandby, triggerStandbyTakeover, submitWork, createReview, getMyTeams } from '../api/client';
 import { ScoreBar, StarRating, StatusBadge, SkillTags, Loading } from '../components/UI';
+import WorkProgress from '../components/WorkProgress';
 
 export default function TaskDetail() {
     const { id } = useParams();
@@ -365,11 +366,17 @@ export default function TaskDetail() {
                 </div>
             )}
 
-            {/* Show submission */}
+            {/* Show submission and work progress */}
             {task.submission && (
                 <div className="detail-section">
-                    <h2>Submission</h2>
-                    <div className="card">
+                    <h2>Work Progress & Submission</h2>
+                    
+                    {/* Work Progress Tracking */}
+                    <WorkProgress taskId={task.id} user={user} />
+                    
+                    {/* Original Submission Details */}
+                    <div className="card" style={{ marginTop: 16 }}>
+                        <h3 style={{ marginBottom: 16 }}>Original Submission</h3>
                         <p style={{ marginBottom: 8, lineHeight: 1.6 }}>{task.submission.content}</p>
                         {task.submission.link && (
                             <a href={task.submission.link} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">

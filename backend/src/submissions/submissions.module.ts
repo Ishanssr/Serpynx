@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
+import { SubmissionsController, WorkPartsController } from './submissions.controller';
 import { SubmissionsService } from './submissions.service';
-import { SubmissionsController } from './submissions.controller';
+import { WorkBreakdownModule } from '../work-breakdown/work-breakdown.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-    imports: [NotificationsModule],
-    controllers: [SubmissionsController],
-    providers: [SubmissionsService],
+  imports: [WorkBreakdownModule, NotificationsModule],
+  controllers: [SubmissionsController, WorkPartsController],
+  providers: [SubmissionsService],
 })
 export class SubmissionsModule { }

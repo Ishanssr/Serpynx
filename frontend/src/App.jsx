@@ -18,6 +18,8 @@ import PublicProfile from './pages/PublicProfile';
 import Teams from './pages/Teams';
 import TeamDetail from './pages/TeamDetail';
 import Chat from './pages/Chat';
+import ClientDashboard from './components/ClientDashboard';
+import FreelancerDashboard from './components/FreelancerDashboard';
 import { Loading } from './components/UI';
 
 function ProtectedRoute({ children }) {
@@ -35,6 +37,8 @@ function PublicRoute({ children }) {
 }
 
 function AppRoutes() {
+    const { user } = useAuth();
+    
     return (
         <Routes>
             <Route path="/" element={<HomePage />} />
@@ -53,6 +57,14 @@ function AppRoutes() {
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/chat/:conversationId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            
+            {/* Role-specific dashboards */}
+            <Route path="/work-progress" element={
+                <ProtectedRoute>
+                    {user?.role === 'CLIENT' ? <ClientDashboard /> : <FreelancerDashboard />}
+                </ProtectedRoute>
+            } />
+            
             <Route path="*" element={<HomePage />} />
         </Routes>
     );
