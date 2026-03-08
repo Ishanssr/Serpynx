@@ -235,7 +235,7 @@ export default function WorkProgress({ taskId, user }) {
                 <h5 style={{ marginBottom: 8 }}>Files:</h5>
                 
                 {/* GitHub-style File Upload Area */}
-                {isFreelancer && part.status !== 'APPROVED' && (
+                {isFreelancer && (
                   <div style={{ 
                     border: '2px dashed #d1d5db',
                     borderRadius: 8,
