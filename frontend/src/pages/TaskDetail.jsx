@@ -313,7 +313,12 @@ export default function TaskDetail() {
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div className="bid-amount">${bid.amount}</div>
+                                    {isOwner && (
+                                        <div className="bid-amount">${bid.amount}</div>
+                                    )}
+                                    {!isOwner && (
+                                        <div className="bid-amount">💰 Bid submitted</div>
+                                    )}
                                     <div className="card-meta">{bid.estimatedDays} days</div>
                                 </div>
                             </div>

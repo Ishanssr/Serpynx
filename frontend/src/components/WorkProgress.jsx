@@ -27,9 +27,12 @@ export default function WorkProgress({ taskId, user }) {
 
   const fetchWorkParts = async () => {
     try {
+      console.log('Fetching work parts for task:', taskId);
       const res = await getWorkParts(taskId);
+      console.log('Work parts fetched:', res.data);
       setWorkParts(res.data);
     } catch (err) {
+      console.error('Failed to fetch work parts:', err);
       setError(err.response?.data?.message || 'Failed to fetch work parts');
     } finally {
       setLoading(false);
@@ -70,10 +73,15 @@ export default function WorkProgress({ taskId, user }) {
       setError('');
       setUploadingFiles(prev => ({ ...prev, [workPartId]: true }));
       
+      console.log('Uploading file:', file.name, 'to work part:', workPartId);
+      
       await uploadWorkFile(workPartId, file);
+      
+      console.log('File uploaded successfully, fetching work parts...');
       setSuccess('File uploaded successfully!');
       fetchWorkParts();
     } catch (err) {
+      console.error('File upload error:', err);
       setError(err.response?.data?.message || 'Failed to upload file');
     } finally {
       setUploadingFiles(prev => ({ ...prev, [workPartId]: false }));
