@@ -15,9 +15,19 @@ export default function ClientDashboard() {
 
   const fetchTasks = async () => {
     try {
+      console.log('Fetching client tasks...');
       const res = await getMyTasks();
-      setTasks(res.data.filter(task => task.submission)); // Only show tasks with submissions
+      console.log('Tasks response:', res.data);
+      
+      const tasksWithSubmissions = res.data.filter(task => task.submission);
+      console.log('Tasks with submissions:', tasksWithSubmissions);
+      setTasks(tasksWithSubmissions);
+      
+      if (tasksWithSubmissions.length === 0) {
+        setError('No projects with work in progress found.');
+      }
     } catch (err) {
+      console.error('Error fetching tasks:', err);
       setError(err.response?.data?.message || 'Failed to fetch tasks');
     } finally {
       setLoading(false);

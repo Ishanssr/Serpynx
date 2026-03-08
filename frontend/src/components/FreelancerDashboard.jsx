@@ -15,7 +15,10 @@ export default function FreelancerDashboard() {
 
   const fetchAssignedTasks = async () => {
     try {
+      console.log('Fetching assigned tasks...');
       const res = await getMyBids();
+      console.log('Bids response:', res.data);
+      
       const tasks = res.data
         .filter(bid => bid.status === 'ACCEPTED' && bid.task)
         .map(bid => ({
@@ -23,8 +26,15 @@ export default function FreelancerDashboard() {
           bidAmount: bid.amount,
           bidEstimatedDays: bid.estimatedDays
         }));
+      
+      console.log('Filtered tasks:', tasks);
       setAssignedTasks(tasks);
+      
+      if (tasks.length === 0) {
+        setError('No assigned tasks found. Make sure you have accepted bids.');
+      }
     } catch (err) {
+      console.error('Error fetching assigned tasks:', err);
       setError(err.response?.data?.message || 'Failed to fetch assigned tasks');
     } finally {
       setLoading(false);
