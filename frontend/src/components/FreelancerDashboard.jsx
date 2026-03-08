@@ -22,7 +22,25 @@ export default function FreelancerDashboard() {
       const tasks = res.data
         .filter(bid => {
           console.log('Checking bid:', bid.id, 'status:', bid.status, 'task status:', bid.task?.status);
-          return bid.status === 'ACCEPTED' && bid.task && (bid.task.status === 'ASSIGNED' || bid.task.status === 'IN_REVIEW' || bid.task.status === 'COMPLETED');
+          console.log('Task object:', bid.task);
+          
+          // Check if bid is accepted AND task exists
+          if (bid.status !== 'ACCEPTED') {
+            console.log('Bid not accepted, skipping');
+            return false;
+          }
+          
+          if (!bid.task) {
+            console.log('No task object, skipping');
+            return false;
+          }
+          
+          // Check task status - be more flexible
+          const validTaskStatuses = ['ASSIGNED', 'IN_REVIEW', 'COMPLETED', 'OPEN'];
+          const isValidStatus = validTaskStatuses.includes(bid.task.status);
+          console.log('Task status valid:', isValidStatus, 'for status:', bid.task.status);
+          
+          return isValidStatus;
         })
         .map(bid => ({
           ...bid.task,
@@ -34,7 +52,7 @@ export default function FreelancerDashboard() {
       setAssignedTasks(tasks);
       
       if (tasks.length === 0) {
-        setError('No assigned tasks found. Make sure you have accepted bids and tasks have been assigned.');
+        setError('No assigned tasks found. Check console for details. Make sure you have accepted bids and tasks have been assigned.');
       }
     } catch (err) {
       console.error('Error fetching assigned tasks:', err);
