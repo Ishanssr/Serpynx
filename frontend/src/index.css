@@ -57,62 +57,36 @@
   --shadow-glow: 0 0 20px rgba(120, 100, 70, 0.06);
 }
 
-/* Work Progress specific fixes */
-[data-theme="light"] .work-progress h3,
-[data-theme="light"] .work-progress h4,
-[data-theme="light"] .work-progress h5,
-[data-theme="light"] .work-progress p,
-[data-theme="light"] .work-progress div,
-[data-theme="light"] .work-progress span,
-[data-theme="light"] .work-progress li,
+/* Work Progress specific fixes - AGGRESSIVE OVERRIDE */
+[data-theme="light"] .work-progress,
 [data-theme="light"] .work-progress *,
-[data-theme="light"] .work-progress * {
+[data-theme="light"] .work-progress * *,
+[data-theme="light"] .work-progress * * *,
+[data-theme="light"] .work-progress * * * {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+}
+
+[data-theme="dark"] .work-progress,
+[data-theme="dark"] .work-progress *,
+[data-theme="dark"] .work-progress * *,
+[data-theme="dark"] .work-progress * * *,
+[data-theme="dark"] .work-progress * * * {
+  color: #ffffff !important;
+  background-color: #1a1a1a !important;
+}
+
+/* Universal text fix */
+* {
+  color: inherit !important;
+}
+
+[data-theme="light"] * {
   color: #000000 !important;
 }
 
-[data-theme="light"] .work-progress .card {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.2);
-}
-
-[data-theme="light"] .work-progress .btn-primary {
-  background: #000000;
-  color: #ffffff;
-}
-
-[data-theme="light"] .work-progress .btn-secondary {
-  background: #f8f9fa;
-  color: #000000;
-  border-color: rgba(0, 0, 0, 0.3);
-}
-
-/* Dark theme work progress fixes */
-[data-theme="dark"] .work-progress h3,
-[data-theme="dark"] .work-progress h4,
-[data-theme="dark"] .work-progress h5,
-[data-theme="dark"] .work-progress p,
-[data-theme="dark"] .work-progress div,
-[data-theme="dark"] .work-progress span,
-[data-theme="dark"] .work-progress li,
-[data-theme="dark"] .work-progress *,
-[data-theme="dark"] .work-progress * {
+[data-theme="dark"] * {
   color: #ffffff !important;
-}
-
-[data-theme="dark"] .work-progress .card {
-  background: #1a1a1a;
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="dark"] .work-progress .btn-primary {
-  background: #ffffff;
-  color: #000000;
-}
-
-[data-theme="dark"] .work-progress .btn-secondary {
-  background: #2d2d2d;
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Light theme — ensure ALL headings/text are visible */

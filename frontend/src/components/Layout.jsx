@@ -4,13 +4,19 @@ import { useTheme } from '../context/ThemeContext';
 import NotificationBell from './NotificationBell';
 
 export default function Layout({ children }) {
-    const { user, logout } = useAuth();
+    const { user, logout, updateUser } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+
+    const handleRoleSwitch = () => {
+        const newRole = user?.role === 'CLIENT' ? 'FREELANCER' : 'CLIENT';
+        updateUser({ ...user, role: newRole });
+        navigate('/');
     };
 
     const isClient = user?.role === 'CLIENT';
@@ -86,7 +92,18 @@ export default function Layout({ children }) {
                 <div className="sidebar-user">
                     <div className="sidebar-user-name">{user?.name}</div>
                     <div className="sidebar-user-role">{user?.role}</div>
-                    <button onClick={handleLogout} className="btn btn-secondary btn-sm" style={{ marginTop: 12, width: '100%' }}>
+                    
+                    {/* Role Switcher */}
+                    <button 
+                        onClick={handleRoleSwitch}
+                        className="btn btn-primary btn-sm" 
+                        style={{ marginTop: 8, width: '100%', fontSize: '0.75rem' }}
+                        title={`Switch to ${user?.role === 'CLIENT' ? 'Freelancer' : 'Client'} mode`}
+                    >
+                        🔄 Switch to {user?.role === 'CLIENT' ? 'Freelancer' : 'Client'}
+                    </button>
+                    
+                    <button onClick={handleLogout} className="btn btn-secondary btn-sm" style={{ marginTop: 8, width: '100%' }}>
                         Logout
                     </button>
                 </div>
