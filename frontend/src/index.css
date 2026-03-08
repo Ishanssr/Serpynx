@@ -86,6 +86,35 @@
   border-color: rgba(0, 0, 0, 0.3);
 }
 
+/* Dark theme work progress fixes */
+[data-theme="dark"] .work-progress h3,
+[data-theme="dark"] .work-progress h4,
+[data-theme="dark"] .work-progress h5,
+[data-theme="dark"] .work-progress p,
+[data-theme="dark"] .work-progress div,
+[data-theme="dark"] .work-progress span,
+[data-theme="dark"] .work-progress li,
+[data-theme="dark"] .work-progress *,
+[data-theme="dark"] .work-progress * {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .work-progress .card {
+  background: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .work-progress .btn-primary {
+  background: #ffffff;
+  color: #000000;
+}
+
+[data-theme="dark"] .work-progress .btn-secondary {
+  background: #2d2d2d;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 /* Light theme — ensure ALL headings/text are visible */
 [data-theme="light"] h1,
 [data-theme="light"] h2,
