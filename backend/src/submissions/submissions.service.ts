@@ -159,21 +159,32 @@ export class SubmissionsService {
             where: { submissionId: workPart.submissionId },
         });
 
+        // Get task ID from either submission or direct task link
+        const taskId = workPart.submission?.taskId || workPart.taskId;
+        
         const allSubmitted = allParts.every(part => part.status === 'SUBMITTED' || part.status === 'APPROVED');
 
-        if (allSubmitted) {
+        if (allSubmitted && taskId) {
             await this.prisma.task.update({
-                where: { id: workPart.submission.taskId },
+                where: { id: taskId },
                 data: { status: 'IN_REVIEW' },
             });
 
-            // Notify client that all work parts are submitted
-            await this.notificationsService.notifyWorkSubmitted(
-                workPart.submission.task.clientId,
-                'Freelancer',
-                workPart.submission.taskId,
-                workPart.submission.task.title,
-            );
+            // Get task details for notification
+            const task = await this.prisma.task.findUnique({
+                where: { id: taskId },
+                select: { clientId: true, title: true }
+            });
+
+            if (task) {
+                // Notify client that all work parts are submitted
+                await this.notificationsService.notifyWorkSubmitted(
+                    task.clientId,
+                    'Freelancer',
+                    taskId,
+                    task.title,
+                );
+            }
         }
 
         return updatedWorkPart;
@@ -183,6 +194,7 @@ export class SubmissionsService {
         const workPart = await this.prisma.workPart.findUnique({
             where: { id: workPartId },
             include: {
+                task: true,
                 submission: {
                     include: { task: true },
                 },
@@ -190,8 +202,17 @@ export class SubmissionsService {
         });
 
         if (!workPart) throw new NotFoundException('Work part not found');
-        if (workPart.submission.task.clientId !== clientId) {
-            throw new ForbiddenException('You are not the client for this task');
+        
+        // Check permissions - user must be the client
+        let isClient = false;
+        if (workPart.submission) {
+            isClient = workPart.submission.task.clientId === clientId;
+        } else if (workPart.task) {
+            isClient = workPart.task.clientId === clientId;
+        }
+        
+        if (!isClient) {
+            throw new ForbiddenException('You are not authorized to review this work part');
         }
 
         const updateData: any = {
@@ -213,17 +234,27 @@ export class SubmissionsService {
 
         // Check if all parts are approved to complete the task
         if (dto.status === 'APPROVED') {
-            const allParts = await this.prisma.workPart.findMany({
-                where: { submissionId: workPart.submissionId },
-            });
-
-            const allApproved = allParts.every(part => part.status === 'APPROVED');
-
-            if (allApproved) {
-                await this.prisma.task.update({
-                    where: { id: workPart.submission.taskId },
-                    data: { status: 'COMPLETED' },
+            // Get task ID from either submission or direct task link
+            const taskId = workPart.submission?.taskId || workPart.taskId;
+            
+            if (taskId) {
+                const allParts = await this.prisma.workPart.findMany({
+                    where: { 
+                        OR: [
+                            { submissionId: workPart.submissionId },
+                            { taskId: taskId }
+                        ]
+                    },
                 });
+
+                const allApproved = allParts.every(part => part.status === 'APPROVED');
+
+                if (allApproved) {
+                    await this.prisma.task.update({
+                        where: { id: taskId },
+                        data: { status: 'COMPLETED' },
+                    });
+                }
             }
         }
 
