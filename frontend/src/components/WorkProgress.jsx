@@ -231,38 +231,104 @@ export default function WorkProgress({ taskId, user }) {
               )}
 
               {/* Files */}
-              {part.files && part.files.length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <h5 style={{ marginBottom: 8 }}>Files:</h5>
+              <div style={{ marginBottom: 16 }}>
+                <h5 style={{ marginBottom: 8 }}>Files:</h5>
+                
+                {/* GitHub-style File Upload Area */}
+                {isFreelancer && part.status !== 'APPROVED' && (
+                  <div style={{ 
+                    border: '2px dashed #d1d5db',
+                    borderRadius: 8,
+                    padding: 24,
+                    textAlign: 'center',
+                    backgroundColor: '#f8fafc',
+                    marginBottom: 16,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}>
+                    <input
+                      type="file"
+                      id={`file-upload-${part.id}`}
+                      style={{ display: 'none' }}
+                      onChange={(e) => e.target.files[0] && handleFileUpload(part.id, e.target.files[0])}
+                      disabled={uploadingFiles[part.id]}
+                    />
+                    <label htmlFor={`file-upload-${part.id}`} style={{ cursor: 'pointer', margin: 0 }}>
+                      <div style={{ fontSize: '2rem', marginBottom: 8 }}>📁</div>
+                      <div style={{ 
+                        fontSize: '0.875rem', 
+                        color: '#374151',
+                        marginBottom: 4,
+                        fontWeight: 500
+                      }}>
+                        Drop files here or click to upload
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                        Maximum file size: 10MB
+                      </div>
+                    </label>
+                  </div>
+                )}
+
+                {/* Existing Files */}
+                {part.files && part.files.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {part.files.map((file) => (
                       <div key={file.id} style={{ 
                         display: 'flex', 
                         justifyContent: 'space-between', 
                         alignItems: 'center',
-                        padding: 8,
-                        backgroundColor: '#f9fafb',
-                        borderRadius: 6
+                        padding: 12,
+                        backgroundColor: '#f8fafc',
+                        borderRadius: 6,
+                        border: '1px solid #e5e7eb',
+                        transition: 'all 0.2s ease'
                       }}>
-                        <div>
-                          <span style={{ fontWeight: 500 }}>{file.filename}</span>
-                          <span style={{ marginLeft: 8, color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
-                            ({(file.size / 1024).toFixed(1)} KB)
-                          </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ 
+                            fontSize: '1.2rem',
+                            color: '#6b7280'
+                          }}>
+                            {file.filename.endsWith('.pdf') ? '📄' : 
+                             file.filename.endsWith('.zip') ? '📦' :
+                             file.filename.endsWith('.js') || file.filename.endsWith('.jsx') ? '📜' :
+                             file.filename.endsWith('.css') ? '🎨' :
+                             file.filename.endsWith('.html') ? '🌐' :
+                             file.filename.endsWith('.png') || file.filename.endsWith('.jpg') || file.filename.endsWith('.jpeg') ? '🖼️' :
+                             '📎'}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 500, color: '#1a1a1a' }}>{file.filename}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                              {(file.size / 1024).toFixed(1)} KB
+                            </div>
+                          </div>
                         </div>
-                        {isFreelancer && (
-                          <button 
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <a 
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="btn btn-secondary btn-sm"
-                            onClick={() => handleFileDelete(part.id, file.id)}
+                            style={{ textDecoration: 'none' }}
                           >
-                            Delete
-                          </button>
-                        )}
+                            🔗 View
+                          </a>
+                          {isFreelancer && (
+                            <button 
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => handleFileDelete(part.id, file.id)}
+                              style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}
+                            >
+                              🗑️ Delete
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Freelancer Actions */}
               {isFreelancer && part.status !== 'APPROVED' && (
@@ -277,43 +343,21 @@ export default function WorkProgress({ taskId, user }) {
                   )}
                   
                   {part.status === 'IN_PROGRESS' && (
-                    <>
-                      <button 
-                        className="btn btn-success btn-sm"
-                        onClick={() => handleStatusUpdate(part.id, 'SUBMITTED')}
-                      >
-                        Submit for Review
-                      </button>
-                      <label className="btn btn-secondary btn-sm" style={{ margin: 0 }}>
-                        📎 Upload File
-                        <input
-                          type="file"
-                          hidden
-                          onChange={(e) => e.target.files[0] && handleFileUpload(part.id, e.target.files[0])}
-                          disabled={uploadingFiles[part.id]}
-                        />
-                      </label>
-                    </>
+                    <button 
+                      className="btn btn-success btn-sm"
+                      onClick={() => handleStatusUpdate(part.id, 'SUBMITTED')}
+                    >
+                      Submit for Review
+                    </button>
                   )}
                   
                   {part.status === 'REVISION_REQUIRED' && (
-                    <>
-                      <button 
-                        className="btn btn-success btn-sm"
-                        onClick={() => handleStatusUpdate(part.id, 'SUBMITTED')}
-                      >
-                        Resubmit
-                      </button>
-                      <label className="btn btn-secondary btn-sm" style={{ margin: 0 }}>
-                        📎 Upload File
-                        <input
-                          type="file"
-                          hidden
-                          onChange={(e) => e.target.files[0] && handleFileUpload(part.id, e.target.files[0])}
-                          disabled={uploadingFiles[part.id]}
-                        />
-                      </label>
-                    </>
+                    <button 
+                      className="btn btn-success btn-sm"
+                      onClick={() => handleStatusUpdate(part.id, 'SUBMITTED')}
+                    >
+                      Resubmit
+                    </button>
                   )}
                 </div>
               )}
