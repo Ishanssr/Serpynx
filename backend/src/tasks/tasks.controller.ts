@@ -37,7 +37,15 @@ export class TasksController {
             throw new UnauthorizedException('Authentication required');
         }
         
-        return this.tasksService.getWorkParts(id, req.user.id);
+        // Debug: Log the request
+        console.log('Fetching work parts for task:', id, 'User:', req.user.id);
+        
+        const workParts = await this.tasksService.getWorkParts(id, req.user.id);
+        
+        // Debug: Log the result
+        console.log('Work parts found:', workParts.length, workParts);
+        
+        return workParts;
     }
 
     @Post()

@@ -26,13 +26,17 @@ export class TasksService {
         });
 
         // Immediately create work breakdown using AI
+        console.log('Creating work breakdown for task:', task.title);
         const workBreakdown = await this.workBreakdownService.breakDownWork(
             task.title,
             task.description,
             task.requiredSkills
         );
 
+        console.log('Work breakdown generated:', workBreakdown);
+
         // Create work parts for the task
+        console.log('Creating work parts for task:', task.id);
         await this.prisma.$transaction(
             workBreakdown.map(part =>
                 this.prisma.workPart.create({
@@ -45,6 +49,8 @@ export class TasksService {
                 })
             )
         );
+
+        console.log('Work parts created successfully');
 
         return task;
     }
