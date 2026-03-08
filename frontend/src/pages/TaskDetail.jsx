@@ -343,15 +343,15 @@ export default function TaskDetail() {
             )}
 
             {/* Show submission and work progress */}
-            {isAssigned && task.status === 'ASSIGNED' && (
+            {(isAssigned && task.status === 'ASSIGNED') || (isOwner && (task.status === 'ASSIGNED' || task.status === 'IN_REVIEW' || task.status === 'COMPLETED')) && (
                 <div className="detail-section">
                     <h2>Work Progress</h2>
                     
                     {/* Work Progress Tracking - Show even before submission */}
                     <WorkProgress taskId={task.id} user={user} />
                     
-                    {/* Submit Work Form */}
-                    {!task.submission && (
+                    {/* Submit Work Form - Only for assigned freelancers */}
+                    {isAssigned && !task.submission && (
                         <div className="card" style={{ marginTop: 16 }}>
                             <h3 style={{ marginBottom: 16 }}>Submit Initial Work</h3>
                             <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>

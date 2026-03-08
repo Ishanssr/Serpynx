@@ -1,6 +1,6 @@
 import {
     Controller, Get, Post, Patch, Delete,
-    Body, Param, Query, UseGuards, Request,
+    Body, Param, Query, UseGuards, Request, UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TasksService } from './tasks.service';
@@ -31,7 +31,12 @@ export class TasksController {
 
     @Get(':id/work-parts')
     @UseGuards(AuthGuard('jwt'))
-    getWorkParts(@Param('id') id: string, @Request() req) {
+    async getWorkParts(@Param('id') id: string, @Request() req) {
+        // Check if user is authenticated
+        if (!req.user) {
+            throw new UnauthorizedException('Authentication required');
+        }
+        
         return this.tasksService.getWorkParts(id, req.user.id);
     }
 
