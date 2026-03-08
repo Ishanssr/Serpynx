@@ -4,27 +4,13 @@ import { useTheme } from '../context/ThemeContext';
 import NotificationBell from './NotificationBell';
 
 export default function Layout({ children }) {
-    const { user, logout, updateUser } = useAuth();
+    const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
     const handleLogout = () => {
         logout();
         navigate('/login');
-    };
-
-    const handleRoleSwitch = () => {
-        console.log('Current role:', user?.role);
-        const newRole = user?.role === 'CLIENT' ? 'FREELANCER' : 'CLIENT';
-        console.log('Switching to:', newRole);
-        
-        // Update user in context and localStorage
-        const updatedUser = { ...user, role: newRole };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        updateUser(updatedUser);
-        
-        // Force page reload to apply changes
-        window.location.href = '/';
     };
 
     const isClient = user?.role === 'CLIENT';
@@ -100,18 +86,7 @@ export default function Layout({ children }) {
                 <div className="sidebar-user">
                     <div className="sidebar-user-name">{user?.name}</div>
                     <div className="sidebar-user-role">{user?.role}</div>
-                    
-                    {/* Role Switcher */}
-                    <button 
-                        onClick={handleRoleSwitch}
-                        className="btn btn-primary btn-sm" 
-                        style={{ marginTop: 8, width: '100%', fontSize: '0.75rem' }}
-                        title={`Switch to ${user?.role === 'CLIENT' ? 'Freelancer' : 'Client'} mode`}
-                    >
-                        🔄 Switch to {user?.role === 'CLIENT' ? 'Freelancer' : 'Client'}
-                    </button>
-                    
-                    <button onClick={handleLogout} className="btn btn-secondary btn-sm" style={{ marginTop: 8, width: '100%' }}>
+                    <button onClick={handleLogout} className="btn btn-secondary btn-sm" style={{ marginTop: 12, width: '100%' }}>
                         Logout
                     </button>
                 </div>

@@ -57,51 +57,6 @@
   --shadow-glow: 0 0 20px rgba(120, 100, 70, 0.06);
 }
 
-/* Simple text color fixes */
-[data-theme="light"] {
-  color: #000000 !important;
-}
-
-[data-theme="dark"] {
-  color: #ffffff !important;
-}
-
-[data-theme="light"] h1,
-[data-theme="light"] h2,
-[data-theme="light"] h3,
-[data-theme="light"] h4,
-[data-theme="light"] h5,
-[data-theme="light"] h6,
-[data-theme="light"] p,
-[data-theme="light"] span,
-[data-theme="light"] div,
-[data-theme="light"] button,
-[data-theme="light"] input,
-[data-theme="light"] textarea,
-[data-theme="light"] select,
-[data-theme="light"] label,
-[data-theme="light"] .work-progress * {
-  color: #000000 !important;
-}
-
-[data-theme="dark"] h1,
-[data-theme="dark"] h2,
-[data-theme="dark"] h3,
-[data-theme="dark"] h4,
-[data-theme="dark"] h5,
-[data-theme="dark"] h6,
-[data-theme="dark"] p,
-[data-theme="dark"] span,
-[data-theme="dark"] div,
-[data-theme="dark"] button,
-[data-theme="dark"] input,
-[data-theme="dark"] textarea,
-[data-theme="dark"] select,
-[data-theme="dark"] label,
-[data-theme="dark"] .work-progress * {
-  color: #ffffff !important;
-}
-
 /* Light theme — ensure ALL headings/text are visible */
 [data-theme="light"] h1,
 [data-theme="light"] h2,
