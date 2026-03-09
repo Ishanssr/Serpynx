@@ -222,9 +222,11 @@ export default function WorkProgress({ taskId, user }) {
                   <h5 style={{ marginBottom: 8 }}>Work Update:</h5>
                   <p style={{ 
                     padding: 12, 
-                    backgroundColor: '#f9fafb', 
+                    backgroundColor: '#161616', 
                     borderRadius: 6,
-                    whiteSpace: 'pre-wrap'
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    whiteSpace: 'pre-wrap',
+                    color: '#e5e5e5'
                   }}>
                     {part.content}
                   </p>
@@ -237,9 +239,11 @@ export default function WorkProgress({ taskId, user }) {
                   <h5 style={{ marginBottom: 8 }}>Client Feedback:</h5>
                   <p style={{ 
                     padding: 12, 
-                    backgroundColor: '#fef2f2', 
+                    backgroundColor: '#161616', 
                     borderRadius: 6,
-                    borderLeft: '4px solid #ef4444'
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderLeft: '4px solid #ef4444',
+                    color: '#e5e5e5'
                   }}>
                     {part.feedback}
                   </p>
@@ -253,11 +257,11 @@ export default function WorkProgress({ taskId, user }) {
                 {/* GitHub-style File Upload Area */}
                 {isFreelancer && (
                   <div style={{ 
-                    border: '2px dashed #d1d5db',
+                    border: '2px dashed #4a5568',
                     borderRadius: 8,
                     padding: 24,
                     textAlign: 'center',
-                    backgroundColor: '#f8fafc',
+                    backgroundColor: '#161616',
                     marginBottom: 16,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease'
@@ -295,9 +299,9 @@ export default function WorkProgress({ taskId, user }) {
                         justifyContent: 'space-between', 
                         alignItems: 'center',
                         padding: 12,
-                        backgroundColor: '#f8fafc',
+                        backgroundColor: '#161616',
                         borderRadius: 6,
-                        border: '1px solid #e5e7eb',
+                        border: '1px solid rgba(255,255,255,0.08)',
                         transition: 'all 0.2s ease'
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -334,7 +338,7 @@ export default function WorkProgress({ taskId, user }) {
                             <button 
                               className="btn btn-secondary btn-sm"
                               onClick={() => handleFileDelete(part.id, file.id)}
-                              style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}
+                              style={{ backgroundColor: '#374151', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)' }}
                             >
                               🗑️ Delete
                             </button>

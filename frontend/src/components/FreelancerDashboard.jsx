@@ -163,10 +163,10 @@ export default function FreelancerDashboard() {
           <h2 style={{ marginBottom: 16 }}>
             Managing: {selectedTask.title}
           </h2>
-          <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#f9fafb', borderRadius: 6 }}>
-            <h4 style={{ margin: '0 0 8px 0' }}>Project Details</h4>
-            <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>{selectedTask.description}</p>
-            <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+          <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6 }}>
+            <h4 style={{ margin: '0 0 8px 0', color: '#e5e5e5' }}>Project Details</h4>
+            <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: 1.5, color: '#e5e5e5' }}>{selectedTask.description}</p>
+            <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#a0a0a0' }}>
               <strong>Budget:</strong> ${selectedTask.bidAmount} • 
               <strong> Estimated:</strong> {selectedTask.bidEstimatedDays} days • 
               <strong> Client:</strong> {selectedTask.client?.name}

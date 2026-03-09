@@ -108,6 +108,32 @@
   border: 1px solid rgba(255,255,255,0.08) !important;
 }
 
+/* Dark theme - override specific light backgrounds */
+[data-theme="dark"] div[style*="backgroundColor: #f9fafb"],
+[data-theme="dark"] div[style*="backgroundColor: #fef2f2"],
+[data-theme="dark"] div[style*="backgroundColor: #f8fafc"] {
+  background: #161616 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* Dark theme - override light gray backgrounds */
+[data-theme="dark"] div[style*="backgroundColor: #f8fafc"] {
+  background: #161616 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* Dark theme - override light blue backgrounds */
+[data-theme="dark"] div[style*="border: 2px dashed #d1d5db"] {
+  border: 2px dashed #4a5568 !important;
+}
+
+/* Dark theme - override button backgrounds */
+[data-theme="dark"] button[style*="backgroundColor: #fef2f2"] {
+  background: #374151 !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(248,113,113,0.3) !important;
+}
+
 /* Light theme — ensure ALL headings/text are visible */
 [data-theme="light"] h1,
 [data-theme="light"] h2,
