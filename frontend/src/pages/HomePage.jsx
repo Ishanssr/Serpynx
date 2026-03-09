@@ -101,6 +101,7 @@ function Typewriter({ texts }) {
 
 export default function HomePage() {
     const { user } = useAuth();
+    const [currentTagline, setCurrentTagline] = useState(0);
     const [visibleSections, setVisibleSections] = useState(new Set());
 
     useEffect(() => {
@@ -129,7 +130,7 @@ export default function HomePage() {
                     <div className="landing-logo">Serpynx</div>
                     <div className="landing-nav-links">
                         {user ? (
-                            <Link to="/dashboard" className="btn btn-primary">Dashboard</Link>
+                            null
                         ) : (
                             <>
                                 <Link to="/login" className="landing-nav-link">Sign In</Link>
@@ -152,12 +153,19 @@ export default function HomePage() {
                         and ship projects faster than ever before.
                     </p>
                     <div className="hero-actions">
-                        <Link to="/register" className="btn btn-primary btn-lg">
-                            Start Free →
-                        </Link>
-                        <Link to="/tasks" className="btn btn-outline btn-lg">
-                            Browse Tasks
-                        </Link>
+                        {!user ? (
+                            <>
+                                <Link to="/register" className="btn btn-primary btn-lg">
+                                    Start Free →
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <Link to="/dashboard" className="btn btn-primary btn-lg">
+                                    Dashboard
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div className="hero-glow" />
