@@ -125,10 +125,10 @@ export default function FreelancerDashboard() {
                 onClick={() => setSelectedTask(selectedTask?.id === task.id ? null : task)}
                 style={{
                   padding: 16,
-                  border: selectedTask?.id === task.id ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                  border: selectedTask?.id === task.id ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.08)',
                   borderRadius: 8,
                   cursor: 'pointer',
-                  backgroundColor: selectedTask?.id === task.id ? '#f0f9ff' : '#ffffff',
+                  backgroundColor: selectedTask?.id === task.id ? '#1e3a8a' : '#161616',
                   transition: 'all 0.2s ease'
                 }}
               >

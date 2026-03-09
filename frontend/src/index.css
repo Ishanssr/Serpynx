@@ -57,6 +57,57 @@
   --shadow-glow: 0 0 20px rgba(120, 100, 70, 0.06);
 }
 
+/* Dark theme — ensure ALL headings/text are visible */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6,
+[data-theme="dark"] .page-header h1,
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .detail-section h2,
+[data-theme="dark"] .empty-state h3,
+[data-theme="dark"] .work-progress h3,
+[data-theme="dark"] .work-progress h4,
+[data-theme="dark"] .work-progress h5 {
+  color: #ffffff !important;
+}
+
+/* Dark theme card consistency */
+[data-theme="dark"] .card {
+  background: #161616 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Dark theme form elements */
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-textarea,
+[data-theme="dark"] .form-select {
+  background: #161616 !important;
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* Dark theme task cards and project cards */
+[data-theme="dark"] div[style*="backgroundColor: #ffffff"],
+[data-theme="dark"] div[style*="background: #ffffff"],
+[data-theme="dark"] div[style*="background: white"] {
+  background: #161616 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* Dark theme hover states */
+[data-theme="dark"] div[style*="backgroundColor: #f0f9ff"] {
+  background: #1e3a8a !important;
+}
+
+/* Dark theme borders */
+[data-theme="dark"] div[style*="border: 1px solid #e5e7eb"] {
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
 /* Light theme — ensure ALL headings/text are visible */
 [data-theme="light"] h1,
 [data-theme="light"] h2,
