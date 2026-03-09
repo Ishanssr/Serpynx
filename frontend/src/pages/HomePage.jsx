@@ -127,7 +127,11 @@ export default function HomePage() {
             {/* Navigation */}
             <nav className="landing-nav">
                 <div className="landing-nav-inner">
-                    <div className="landing-logo">Serpynx</div>
+                    <div className="landing-logo">
+                        <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            Serpynx
+                        </Link>
+                    </div>
                     <div className="landing-nav-links">
                         {user ? (
                             null

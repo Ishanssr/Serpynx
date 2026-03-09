@@ -19,7 +19,11 @@ export default function Layout({ children }) {
     return (
         <div className="app-layout">
             <aside className="sidebar">
-                <div className="sidebar-logo">Serpynx</div>
+                <div className="sidebar-logo">
+                    <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        Serpynx
+                    </Link>
+                </div>
                 <div className="sidebar-subtitle">Smart Freelance Marketplace</div>
 
                 <ul className="sidebar-nav">
