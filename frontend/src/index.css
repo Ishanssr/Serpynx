@@ -677,16 +677,6 @@ a:hover {
   letter-spacing: 1px;
 }
 
-.sidebar-logo-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.sidebar-logo-link:hover {
-  text-decoration: none;
-  color: inherit;
-}
-
 .nav-icon {
   display: inline-block;
   width: 20px;

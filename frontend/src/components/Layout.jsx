@@ -19,9 +19,7 @@ export default function Layout({ children }) {
     return (
         <div className="app-layout">
             <aside className="sidebar">
-                <Link to="/" className="sidebar-logo-link">
-                    <div className="sidebar-logo">Serpynx</div>
-                </Link>
+                <div className="sidebar-logo">Serpynx</div>
                 <div className="sidebar-subtitle">Smart Freelance Marketplace</div>
 
                 <ul className="sidebar-nav">
