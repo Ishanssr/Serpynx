@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAssignedTasks } from '../api/client';
-import { StatusBadge } from './UI';
+import { StatusBadge, Loading } from './UI';
 import ProjectWorkspace from './ProjectWorkspace';
 
 export default function FreelancerDashboard() {
