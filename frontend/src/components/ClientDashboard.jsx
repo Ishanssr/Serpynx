@@ -74,11 +74,12 @@ export default function ClientDashboard() {
                 onClick={() => setSelectedTask(selectedTask?.id === task.id ? null : task)}
                 style={{
                   padding: 16,
-                  border: selectedTask?.id === task.id ? '2px solid var(--accent)' : '1px solid var(--border-color)',
+                  border: selectedTask?.id === task.id ? '1px solid var(--accent)' : '1px solid var(--border-color)',
                   borderRadius: 12,
                   cursor: 'pointer',
-                  backgroundColor: selectedTask?.id === task.id ? 'var(--accent)' : 'var(--bg-card)',
-                  transition: 'all 0.2s ease'
+                  backgroundColor: selectedTask?.id === task.id ? 'var(--bg-card-hover)' : 'var(--bg-card)',
+                  transition: 'all 0.2s ease',
+                  boxShadow: selectedTask?.id === task.id ? '0 0 0 1px rgba(59,130,246,0.4)' : 'none'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
