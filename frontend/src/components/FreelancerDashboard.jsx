@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAssignedTasks } from '../api/client';
+import { getMyBids } from '../api/client';
 import { StatusBadge, Loading } from './UI';
 import ProjectWorkspace from './ProjectWorkspace';
 
