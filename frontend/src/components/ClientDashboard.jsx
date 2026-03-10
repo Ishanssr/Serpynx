@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getMyTasks } from '../api/client';
 import { StatusBadge, Loading } from './UI';
-import WorkProgress from './WorkProgress';
+import ProjectWorkspace from './ProjectWorkspace';
 
 export default function ClientDashboard() {
   const [tasks, setTasks] = useState([]);
@@ -113,7 +113,7 @@ export default function ClientDashboard() {
           <h2 style={{ marginBottom: 16 }}>
             Progress for: {selectedTask.title}
           </h2>
-          <WorkProgress taskId={selectedTask.id} user={{ role: 'CLIENT' }} />
+          <ProjectWorkspace taskId={selectedTask.id} user={{ role: 'CLIENT' }} />
         </div>
       )}
     </div>

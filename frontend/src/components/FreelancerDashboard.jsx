@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getMyBids } from '../api/client';
-import { StatusBadge, Loading } from './UI';
-import WorkProgress from './WorkProgress';
+import { getAssignedTasks } from '../api/client';
+import { StatusBadge } from './UI';
+import ProjectWorkspace from './ProjectWorkspace';
 
 export default function FreelancerDashboard() {
   const [assignedTasks, setAssignedTasks] = useState([]);
@@ -173,7 +173,7 @@ export default function FreelancerDashboard() {
               <strong> Client:</strong> {selectedTask.client?.name}
             </div>
           </div>
-          <WorkProgress taskId={selectedTask.id} user={{ role: 'FREELANCER' }} />
+          <ProjectWorkspace taskId={selectedTask.id} user={{ role: 'FREELANCER' }} />
         </div>
       )}
     </div>
