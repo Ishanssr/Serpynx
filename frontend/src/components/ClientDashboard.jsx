@@ -74,10 +74,10 @@ export default function ClientDashboard() {
                 onClick={() => setSelectedTask(selectedTask?.id === task.id ? null : task)}
                 style={{
                   padding: 16,
-                  border: selectedTask?.id === task.id ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 8,
+                  border: selectedTask?.id === task.id ? '2px solid var(--accent)' : '1px solid var(--border-color)',
+                  borderRadius: 12,
                   cursor: 'pointer',
-                  backgroundColor: selectedTask?.id === task.id ? '#1e3a8a' : '#161616',
+                  backgroundColor: selectedTask?.id === task.id ? 'var(--accent)' : 'var(--bg-card)',
                   transition: 'all 0.2s ease'
                 }}
               >

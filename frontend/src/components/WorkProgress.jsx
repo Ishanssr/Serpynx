@@ -222,11 +222,11 @@ export default function WorkProgress({ taskId, user }) {
                   <h5 style={{ marginBottom: 8 }}>Work Update:</h5>
                   <p style={{ 
                     padding: 12, 
-                    backgroundColor: '#161616', 
-                    borderRadius: 6,
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    backgroundColor: 'var(--bg-card)', 
+                    borderRadius: 12,
+                    border: '1px solid var(--border-color)',
                     whiteSpace: 'pre-wrap',
-                    color: '#e5e5e5'
+                    color: 'var(--text-primary)'
                   }}>
                     {part.content}
                   </p>
@@ -239,11 +239,11 @@ export default function WorkProgress({ taskId, user }) {
                   <h5 style={{ marginBottom: 8 }}>Client Feedback:</h5>
                   <p style={{ 
                     padding: 12, 
-                    backgroundColor: '#161616', 
-                    borderRadius: 6,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderLeft: '4px solid #ef4444',
-                    color: '#e5e5e5'
+                    backgroundColor: 'var(--bg-card)', 
+                    borderRadius: 12,
+                    border: '1px solid var(--border-color)',
+                    borderLeft: '4px solid var(--danger)',
+                    color: 'var(--text-primary)'
                   }}>
                     {part.feedback}
                   </p>
@@ -257,11 +257,11 @@ export default function WorkProgress({ taskId, user }) {
                 {/* GitHub-style File Upload Area */}
                 {isFreelancer && (
                   <div style={{ 
-                    border: '2px dashed #4a5568',
-                    borderRadius: 8,
+                    border: '2px dashed var(--border-color)',
+                    borderRadius: 12,
                     padding: 24,
                     textAlign: 'center',
-                    backgroundColor: '#161616',
+                    backgroundColor: 'var(--bg-card)',
                     marginBottom: 16,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease'
@@ -299,9 +299,9 @@ export default function WorkProgress({ taskId, user }) {
                         justifyContent: 'space-between', 
                         alignItems: 'center',
                         padding: 12,
-                        backgroundColor: '#161616',
-                        borderRadius: 6,
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        backgroundColor: 'var(--bg-card)',
+                        borderRadius: 12,
+                        border: '1px solid var(--border-color)',
                         transition: 'all 0.2s ease'
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -338,7 +338,7 @@ export default function WorkProgress({ taskId, user }) {
                             <button 
                               className="btn btn-secondary btn-sm"
                               onClick={() => handleFileDelete(part.id, file.id)}
-                              style={{ backgroundColor: '#374151', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)' }}
+                              style={{ backgroundColor: 'var(--bg-card-hover)', color: 'var(--danger)', border: '1px solid var(--danger)' }}
                             >
                               🗑️ Delete
                             </button>

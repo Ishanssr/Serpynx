@@ -125,10 +125,10 @@ export default function FreelancerDashboard() {
                 onClick={() => setSelectedTask(selectedTask?.id === task.id ? null : task)}
                 style={{
                   padding: 16,
-                  border: selectedTask?.id === task.id ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 8,
+                  border: selectedTask?.id === task.id ? '2px solid var(--accent)' : '1px solid var(--border-color)',
+                  borderRadius: 12,
                   cursor: 'pointer',
-                  backgroundColor: selectedTask?.id === task.id ? '#1e3a8a' : '#161616',
+                  backgroundColor: selectedTask?.id === task.id ? 'var(--accent)' : 'var(--bg-card)',
                   transition: 'all 0.2s ease'
                 }}
               >
@@ -163,10 +163,10 @@ export default function FreelancerDashboard() {
           <h2 style={{ marginBottom: 16 }}>
             Managing: {selectedTask.title}
           </h2>
-          <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#161616', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6 }}>
-            <h4 style={{ margin: '0 0 8px 0', color: '#e5e5e5' }}>Project Details</h4>
-            <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: 1.5, color: '#e5e5e5' }}>{selectedTask.description}</p>
-            <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#a0a0a0' }}>
+          <div style={{ marginBottom: 16, padding: 12, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 12 }}>
+            <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Project Details</h4>
+            <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: 1.5, color: 'var(--text-primary)' }}>{selectedTask.description}</p>
+            <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
               <strong>Budget:</strong> ${selectedTask.bidAmount} • 
               <strong> Estimated:</strong> {selectedTask.bidEstimatedDays} days • 
               <strong> Client:</strong> {selectedTask.client?.name}
