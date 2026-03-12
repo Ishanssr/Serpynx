@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { TasksModule } from './tasks/tasks.module';
+import { BidsModule } from './bids/bids.module';
 import { SubmissionsModule } from './submissions/submissions.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { MatchingModule } from './matching/matching.module';
@@ -24,7 +25,7 @@ import { HealthController } from './common/health.controller';
     PrismaModule,
     AuthModule,
     TasksModule,
-    // BidsModule,
+    BidsModule,
     // SubmissionsModule,
     // ReviewsModule,
     // MatchingModule,
