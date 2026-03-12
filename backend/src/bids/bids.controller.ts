@@ -3,11 +3,11 @@ import { AuthGuard } from '@nestjs/passport';
 import { BidsService } from './bids.service';
 import { CreateBidDto } from './bids.dto';
 
-@Controller('tasks/:taskId/bids')
+@Controller('api/tasks')
 export class BidsController {
   constructor(private readonly bidsService: BidsService) {}
 
-  @Post()
+  @Post(':taskId/bids')
   @UseGuards(AuthGuard('jwt'))
   async createBid(
     @Param('taskId') taskId: string,
@@ -17,7 +17,7 @@ export class BidsController {
     return this.bidsService.createBid(taskId, req.user.id, dto);
   }
 
-  @Get()
+  @Get(':taskId/bids')
   async getTaskBids(@Param('taskId') taskId: string) {
     return this.bidsService.getTaskBids(taskId);
   }
