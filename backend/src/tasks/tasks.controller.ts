@@ -123,4 +123,11 @@ export class TasksController {
     delete(@Param('id') id: string, @Request() req) {
         return this.tasksService.delete(id, req.user.id);
     }
+
+    @Post(':id/assign')
+    @UseGuards(AuthGuard('jwt'))
+    async handleTaskAssignment(@Param('id') taskId: string) {
+        await this.tasksService.handleTaskAssignment(taskId);
+        return { message: 'Work parts created for assigned task' };
+    }
 }

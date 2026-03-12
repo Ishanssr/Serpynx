@@ -2,12 +2,14 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto, UpdateTaskDto, TaskQueryDto } from './tasks.dto';
 import { WorkBreakdownService } from '../work-breakdown/work-breakdown.service';
+import { WorkPartCreatorService } from './work-part-creator.service';
 
 @Injectable()
 export class TasksService {
     constructor(
         private prisma: PrismaService,
-        private workBreakdownService: WorkBreakdownService
+        private workBreakdownService: WorkBreakdownService,
+        private workPartCreatorService: WorkPartCreatorService
     ) { }
 
     async create(clientId: string, dto: CreateTaskDto) {
@@ -195,5 +197,21 @@ export class TasksService {
         });
 
         return workParts;
+    }
+
+    async handleTaskAssignment(taskId: string): Promise<void> {
+        // Check if task is being assigned to ASSIGNED status
+        const task = await this.prisma.task.findUnique({
+            where: { id: taskId }
+        });
+
+        if (!task) {
+            throw new NotFoundException('Task not found');
+        }
+
+        // Only create work parts if task is being assigned to ASSIGNED status
+        if (task.status === 'ASSIGNED') {
+            await this.workPartCreatorService.createDefaultWorkParts(taskId);
+        }
     }
 }
