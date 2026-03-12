@@ -9,7 +9,7 @@ export default function MyBids() {
 
     useEffect(() => {
         getMyBids()
-            .then((res) => setBids(res.data.data || res.data))
+            .then((res) => setBids(res.data))
             .catch(console.error)
             .finally(() => setLoading(false));
     }, []);
@@ -34,21 +34,21 @@ export default function MyBids() {
             ) : (
                 <div>
                     {bids.map((bid) => (
-                        <Link to={`/tasks/${bid.task?.id}`} key={bid.id} style={{ textDecoration: 'none' }}>
+                        <Link to={`/tasks/${bid.Task?.id}`} key={bid.id} style={{ textDecoration: 'none' }}>
                             <div className="bid-card">
                                 <div className="bid-header">
                                     <div>
-                                        <div className="bid-freelancer">{bid.task?.title}</div>
+                                        <div className="bid-freelancer">{bid.Task?.title}</div>
                                         <div style={{ marginTop: 4 }}>
-                                            <SkillTags skills={bid.task?.requiredSkills} />
+                                            <SkillTags skills={bid.Task?.requiredSkills} />
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
                                         <StatusBadge status={bid.status} />
-                                        {bid.task?.status && (
+                                        {bid.Task?.status && (
                                             <div style={{ marginTop: 4 }}>
                                                 <span className="card-meta">Task: </span>
-                                                <StatusBadge status={bid.task.status} />
+                                                <StatusBadge status={bid.Task.status} />
                                             </div>
                                         )}
                                     </div>
@@ -56,7 +56,7 @@ export default function MyBids() {
                                 <div className="bid-details">
                                     <span>💰 Your bid: <strong>${bid.amount}</strong></span>
                                     <span>⏱ {bid.estimatedDays} days</span>
-                                    <span>📊 Task budget: ${bid.task?.budget}</span>
+                                    <span>📊 Task budget: ${bid.Task?.budget}</span>
                                 </div>
                                 <ScoreBar score={bid.smartScore || 0} />
                             </div>

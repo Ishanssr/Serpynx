@@ -76,7 +76,7 @@ export class BidsService {
       orderBy: { createdAt: 'desc' }
     });
 
-    return bids;
+    return { data: bids };
   }
 
   async getMyBids(freelancerId: string) {
@@ -95,6 +95,6 @@ export class BidsService {
       orderBy: { createdAt: 'desc' }
     });
 
-    return bids;
+    return { data: bids };
   }
 }
