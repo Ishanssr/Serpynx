@@ -44,19 +44,19 @@ export class MatchingService {
         const bid = await this.prisma.bid.findUnique({
             where: { id: bidId },
             include: {
-                freelancer: { select: { skills: true, avgRating: true } },
-                task: { select: { budget: true, requiredSkills: true } },
+                User: { select: { skills: true, avgRating: true } },
+                Task: { select: { budget: true, requiredSkills: true } },
             },
         });
 
         if (!bid) return 0;
 
         const score = this.calculateSmartScore(
-            bid.freelancer.skills,
-            bid.task.requiredSkills,
+            bid.User.skills,
+            bid.Task.requiredSkills,
             bid.amount,
-            bid.task.budget,
-            bid.freelancer.avgRating,
+            bid.Task.budget,
+            bid.User.avgRating,
         );
 
         await this.prisma.bid.update({

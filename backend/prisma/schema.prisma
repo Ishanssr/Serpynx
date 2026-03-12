@@ -7,7 +7,7 @@ datasource db {
 }
 
 model ActivityLog {
-  id        String         @id
+  id        String         @id @default(uuid())
   action    ActivityAction
   metadata  Json?
   createdAt DateTime       @default(now())
@@ -22,7 +22,7 @@ model ActivityLog {
 }
 
 model Bid {
-  id            String    @id
+  id            String    @id @default(uuid())
   amount        Float
   coverLetter   String
   estimatedDays Int
@@ -43,7 +43,7 @@ model Bid {
 }
 
 model ChatRequest {
-  id                                String            @id
+  id                                String            @id @default(uuid())
   status                            ChatRequestStatus @default(PENDING)
   createdAt                         DateTime          @default(now())
   senderId                          String
@@ -56,9 +56,9 @@ model ChatRequest {
 }
 
 model Conversation {
-  id                              String    @id
+  id                              String    @id @default(uuid())
   createdAt                       DateTime  @default(now())
-  updatedAt                       DateTime
+  updatedAt                       DateTime  @updatedAt
   user1Id                         String
   user2Id                         String
   User_Conversation_user1IdToUser User      @relation("Conversation_user1IdToUser", fields: [user1Id], references: [id])
@@ -71,7 +71,7 @@ model Conversation {
 }
 
 model Message {
-  id             String       @id
+  id             String       @id @default(uuid())
   content        String
   createdAt      DateTime     @default(now())
   read           Boolean      @default(false)
@@ -85,7 +85,7 @@ model Message {
 }
 
 model Notification {
-  id        String   @id
+  id        String   @id @default(uuid())
   type      String
   message   String
   isRead    Boolean  @default(false)
@@ -99,7 +99,7 @@ model Notification {
 }
 
 model ProjectMessage {
-  id        String   @id
+  id        String   @id @default(uuid())
   message   String
   createdAt DateTime @default(now())
   taskId    String
@@ -112,7 +112,7 @@ model ProjectMessage {
 }
 
 model Review {
-  id                           String   @id
+  id                           String   @id @default(uuid())
   rating                       Int
   comment                      String?
   createdAt                    DateTime @default(now())
@@ -125,7 +125,7 @@ model Review {
 }
 
 model Submission {
-  id           String     @id
+  id           String     @id @default(uuid())
   content      String
   link         String?
   submittedAt  DateTime   @default(now())
@@ -137,14 +137,14 @@ model Submission {
 }
 
 model Task {
-  id             String           @id
+  id             String           @id @default(uuid())
   title          String
   description    String
   budget         Float
   requiredSkills String[]         @default([])
   status         TaskStatus       @default(OPEN)
   createdAt      DateTime         @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime         @updatedAt
   clientId       String
   assignedToId   String?
   deletedAt      DateTime?
@@ -164,21 +164,21 @@ model Task {
 }
 
 model Team {
-  id          String       @id
+  id          String       @id @default(uuid())
   name        String
   description String?
   createdAt   DateTime     @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime     @updatedAt
   createdById String
   Bid         Bid[]
   User        User         @relation(fields: [createdById], references: [id])
-  TeamMember  TeamMember[]
+  teamMembers TeamMember[]
 
   @@index([createdById])
 }
 
 model TeamMember {
-  id       String   @id
+  id       String   @id @default(uuid())
   role     TeamRole @default(MEMBER)
   joinedAt DateTime @default(now())
   teamId   String
@@ -191,7 +191,7 @@ model TeamMember {
 }
 
 model User {
-  id                                       String           @id
+  id                                       String           @id @default(uuid())
   email                                    String           @unique
   name                                     String
   password                                 String?
@@ -201,7 +201,7 @@ model User {
   avgRating                                Float            @default(0)
   totalReviews                             Int              @default(0)
   createdAt                                DateTime         @default(now())
-  updatedAt                                DateTime
+  updatedAt                                DateTime         @updatedAt
   googleId                                 String?          @unique
   deletedAt                                DateTime?
   isVerified                               Boolean          @default(false)
@@ -230,7 +230,7 @@ model User {
 }
 
 model WorkFile {
-  id           String   @id
+  id           String   @id @default(uuid())
   filename     String
   originalName String
   mimeType     String
@@ -247,7 +247,7 @@ model WorkFile {
 }
 
 model WorkPart {
-  id             String           @id
+  id             String           @id @default(uuid())
   partNumber     Int
   title          String
   description    String
@@ -257,7 +257,7 @@ model WorkPart {
   reviewedAt     DateTime?
   feedback       String?
   createdAt      DateTime         @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime         @updatedAt
   submissionId   String?
   taskId         String?
   order          Int
@@ -273,7 +273,7 @@ model WorkPart {
 }
 
 model WorkSubmission {
-  id            String           @id
+  id            String           @id @default(uuid())
   description   String
   status        SubmissionStatus @default(SUBMITTED)
   submittedBy   String

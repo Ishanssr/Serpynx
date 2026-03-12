@@ -72,8 +72,8 @@ export class ReviewsService {
         const review = await this.prisma.review.findUnique({
             where: { taskId },
             include: {
-                reviewer: { select: { id: true, name: true } },
-                reviewee: { select: { id: true, name: true } },
+                User_Review_reviewerIdToUser: { select: { id: true, name: true } },
+                User_Review_revieweeIdToUser: { select: { id: true, name: true } },
             },
         });
         if (!review) throw new NotFoundException('No review found');

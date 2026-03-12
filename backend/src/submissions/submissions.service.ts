@@ -80,10 +80,10 @@ export class SubmissionsService {
         const submission = await this.prisma.submission.findUnique({
             where: { taskId },
             include: {
-                freelancer: { select: { id: true, name: true } },
-                workParts: {
+                User: { select: { id: true, name: true } },
+                WorkPart: {
                     include: {
-                        files: true,
+                        WorkFile: true,
                     },
                     orderBy: { partNumber: 'asc' },
                 },
@@ -97,9 +97,9 @@ export class SubmissionsService {
         const workPart = await this.prisma.workPart.findUnique({
             where: { id: workPartId },
             include: {
-                task: true,
-                submission: {
-                    include: { task: true },
+                Task: true,
+                Submission: {
+                    include: { Task: true },
                 },
             },
         });
@@ -110,20 +110,20 @@ export class SubmissionsService {
         let hasPermission = false;
         let task: any = null;
         
-        if (workPart.submission) {
-            hasPermission = workPart.submission.freelancerId === freelancerId;
-            task = workPart.submission.task;
-        } else if (workPart.task) {
+        if (workPart.Submission) {
+            hasPermission = workPart.Submission.freelancerId === freelancerId;
+            task = workPart.Submission.Task;
+        } else if (workPart.Task) {
             // For task-linked work parts, check if the freelancer is assigned to the task
             const assignedBid = await this.prisma.bid.findFirst({
                 where: {
-                    taskId: workPart.task.id,
+                    taskId: workPart.Task.id,
                     freelancerId: freelancerId,
                     status: 'ACCEPTED'
                 }
             });
             hasPermission = !!assignedBid;
-            task = workPart.task;
+            task = workPart.Task;
         }
         
         if (!hasPermission) {
@@ -150,7 +150,7 @@ export class SubmissionsService {
             where: { id: workPartId },
             data: updateData,
             include: {
-                files: true,
+                WorkFile: true,
             },
         });
 
@@ -160,7 +160,7 @@ export class SubmissionsService {
         });
 
         // Get task ID from either submission or direct task link
-        const taskId = workPart.submission?.taskId || workPart.taskId;
+        const taskId = workPart.Submission?.taskId || workPart.taskId;
         
         const allSubmitted = allParts.every(part => part.status === 'SUBMITTED' || part.status === 'APPROVED');
 
@@ -194,9 +194,9 @@ export class SubmissionsService {
         const workPart = await this.prisma.workPart.findUnique({
             where: { id: workPartId },
             include: {
-                task: true,
-                submission: {
-                    include: { task: true },
+                Task: true,
+                Submission: {
+                    include: { Task: true },
                 },
             },
         });
@@ -205,10 +205,10 @@ export class SubmissionsService {
         
         // Check permissions - user must be the client
         let isClient = false;
-        if (workPart.submission) {
-            isClient = workPart.submission.task.clientId === clientId;
-        } else if (workPart.task) {
-            isClient = workPart.task.clientId === clientId;
+        if (workPart.Submission) {
+            isClient = workPart.Submission.Task.clientId === clientId;
+        } else if (workPart.Task) {
+            isClient = workPart.Task.clientId === clientId;
         }
         
         if (!isClient) {
@@ -228,14 +228,14 @@ export class SubmissionsService {
             where: { id: workPartId },
             data: updateData,
             include: {
-                files: true,
+                WorkFile: true,
             },
         });
 
         // Check if all parts are approved to complete the task
         if (dto.status === 'APPROVED') {
             // Get task ID from either submission or direct task link
-            const taskId = workPart.submission?.taskId || workPart.taskId;
+            const taskId = workPart.Submission?.taskId || workPart.taskId;
             
             if (taskId) {
                 const allParts = await this.prisma.workPart.findMany({
@@ -265,10 +265,10 @@ export class SubmissionsService {
         const submission = await this.prisma.submission.findUnique({
             where: { taskId },
             include: {
-                task: true,
-                workParts: {
+                Task: true,
+                WorkPart: {
                     include: {
-                        files: true,
+                        WorkFile: true,
                     },
                     orderBy: { partNumber: 'asc' },
                 },
@@ -278,13 +278,13 @@ export class SubmissionsService {
         if (!submission) throw new NotFoundException('No submission found');
 
         // Check if user is either the client or the freelancer
-        const isClient = submission.task.clientId === userId;
+        const isClient = submission.Task.clientId === userId;
         const isFreelancer = submission.freelancerId === userId;
 
         if (!isClient && !isFreelancer) {
-            throw new ForbiddenException('You are not authorized to view this submission');
+            throw new ForbiddenException('You are not authorized to view these work parts');
         }
 
-        return submission.workParts;
+        return submission.WorkPart;
     }
 }

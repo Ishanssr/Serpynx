@@ -74,6 +74,7 @@ export class TasksController {
                         title: part.title,
                         description: part.description,
                         taskId: task.id,
+                        order: part.partNumber, // Add required order field
                     },
                 })
             )
@@ -83,6 +84,7 @@ export class TasksController {
         
         return { message: 'Work parts created', count: workBreakdown.length };
     }
+    @Get(':id/work-parts')
     @UseGuards(AuthGuard('jwt'))
     async getWorkParts(@Param('id') id: string, @Request() req) {
         // Check if user is authenticated

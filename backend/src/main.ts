@@ -61,8 +61,8 @@ async function bootstrap() {
   // Global exception filter — clean error responses, no stack traces leaked
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port, '0.0.0.0');
-  Logger.log(`🚀 Serpynx API running on port ${port} [${process.env.NODE_ENV || 'development'}]`, 'Bootstrap');
+  const PORT = process.env.PORT || 3001;
+  await app.listen(PORT, '0.0.0.0');
+  Logger.log(`🚀 Serpynx API running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`, 'Bootstrap');
 }
 bootstrap();

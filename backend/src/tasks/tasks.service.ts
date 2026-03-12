@@ -21,7 +21,7 @@ export class TasksService {
                 clientId,
             },
             include: {
-                client: { select: { id: true, name: true, email: true } },
+                User: { select: { id: true, name: true, email: true } },
             },
         });
 
@@ -45,6 +45,7 @@ export class TasksService {
                         title: part.title,
                         description: part.description,
                         taskId: task.id, // Link directly to task, not submission
+                        order: part.partNumber, // Use partNumber as order
                     },
                 })
             )
@@ -83,8 +84,8 @@ export class TasksService {
             this.prisma.task.findMany({
                 where,
                 include: {
-                    client: { select: { id: true, name: true } },
-                    _count: { select: { bids: true } },
+                    User: { select: { id: true, name: true } },
+                    _count: { select: { Bid: true } },
                 },
                 orderBy: { [sortBy]: sortOrder },
                 skip,
@@ -108,18 +109,18 @@ export class TasksService {
         const task = await this.prisma.task.findUnique({
             where: { id },
             include: {
-                client: { select: { id: true, name: true, email: true } },
-                bids: {
+                User: { select: { id: true, name: true, email: true } },
+                Bid: {
                     include: {
-                        freelancer: {
+                        User: {
                             select: { id: true, name: true, skills: true, avgRating: true, totalReviews: true },
                         },
-                        team: { select: { id: true, name: true } },
+                        Team: { select: { id: true, name: true } },
                     },
                     orderBy: { smartScore: 'desc' },
                 },
-                submission: true,
-                review: true,
+                Submission: true,
+                Review: true,
             },
         });
         if (!task || task.deletedAt) throw new NotFoundException('Task not found');
@@ -130,7 +131,7 @@ export class TasksService {
         return this.prisma.task.findMany({
             where: { clientId, deletedAt: null },
             include: {
-                _count: { select: { bids: true } },
+                _count: { select: { Bid: true } },
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -188,7 +189,7 @@ export class TasksService {
         const workParts = await this.prisma.workPart.findMany({
             where: { taskId },
             include: {
-                files: true,
+                WorkFile: true,
             },
             orderBy: { partNumber: 'asc' }
         });
