@@ -260,7 +260,7 @@ model WorkPart {
   updatedAt      DateTime         @updatedAt
   submissionId   String?
   taskId         String?
-  order          Int
+  order          Int              @default(0)
   WorkFile       WorkFile[]
   Submission     Submission?      @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   Task           Task?            @relation(fields: [taskId], references: [id], onDelete: Cascade)

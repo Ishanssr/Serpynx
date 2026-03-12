@@ -37,10 +37,20 @@ export default function ProjectWorkspace({ taskId, user }) {
       console.log('Fetching work parts for task:', taskId);
       const res = await getWorkParts(taskId);
       console.log('Work parts fetched:', res.data);
-      setWorkParts(res.data);
+      
+      // Handle empty response or no work parts
+      if (!res.data || res.data.length === 0) {
+        setWorkParts([]);
+        setError('');
+      } else {
+        setWorkParts(res.data);
+      }
     } catch (err) {
       console.error('Failed to fetch work parts:', err);
       setError(err.response?.data?.message || 'Failed to fetch work parts');
+      setWorkParts([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -799,7 +809,48 @@ export default function ProjectWorkspace({ taskId, user }) {
   );
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Loading work parts...</div>;
+  }
+
+  // Show error state if there's an error
+  if (error && workParts.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: 40 }}>
+        <div style={{ fontSize: '1.2rem', marginBottom: 16, color: 'var(--danger)' }}>
+          ⚠️ Error loading work parts
+        </div>
+        <div style={{ color: 'var(--text-secondary)' }}>{error}</div>
+        <button 
+          className="btn btn-primary" 
+          onClick={fetchWorkParts}
+          style={{ marginTop: 16 }}
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  // Show empty state if there are no work parts
+  if (!loading && workParts.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: 40 }}>
+        <div style={{ fontSize: '1.2rem', marginBottom: 16, color: 'var(--text-muted)' }}>
+          📋 No work parts yet
+        </div>
+        <div style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>
+          This project doesn't have any milestones defined yet.
+        </div>
+        {isClient && (
+          <button 
+            className="btn btn-primary" 
+            onClick={() => setActiveTab('create-milestone')}
+          >
+            + Create First Milestone
+          </button>
+        )}
+      </div>
+    );
   }
 
   return (
