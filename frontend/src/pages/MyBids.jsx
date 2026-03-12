@@ -9,7 +9,10 @@ export default function MyBids() {
 
     useEffect(() => {
         getMyBids()
-            .then((res) => setBids(res.data))
+            .then((res) => {
+                const data = res.data;
+                setBids(Array.isArray(data) ? data : data?.data || []);
+            })
             .catch(console.error)
             .finally(() => setLoading(false));
     }, []);
