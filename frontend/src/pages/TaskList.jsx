@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { getTasks } from '../api/client';
 import { StatusBadge, SkillTags, Loading } from '../components/UI';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function TaskList() {
     const [tasks, setTasks] = useState([]);
@@ -108,7 +109,7 @@ export default function TaskList() {
                                     </div>
                                     <SkillTags skills={task.requiredSkills} />
                                     <div className="card-meta" style={{ marginTop: 8 }}>
-                                        Posted by {task.client?.name}
+                                        Posted by {task.client?.name} • {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}
                                     </div>
                                 </div>
                             </Link>
