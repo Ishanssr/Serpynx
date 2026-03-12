@@ -41,8 +41,8 @@ export default function FreelancerDashboard() {
       
       const tasks = bidsData
         .filter(bid => {
-          console.log('Checking bid:', bid.id, 'status:', bid.status, 'task status:', bid.Task?.status);
-          console.log('Task object:', bid.Task);
+          console.log('Checking bid:', bid.id, 'status:', bid.status, 'task status:', bid.task?.status);
+          console.log('Task object:', bid.task);
           
           // Check if bid is accepted AND task exists
           if (bid.status !== 'ACCEPTED') {
@@ -50,20 +50,20 @@ export default function FreelancerDashboard() {
             return false;
           }
           
-          if (!bid.Task) {
+          if (!bid.task) {
             console.log('No task object, skipping');
             return false;
           }
           
           // Check task status - be more flexible
           const validTaskStatuses = ['ASSIGNED', 'IN_REVIEW', 'COMPLETED', 'OPEN'];
-          const isValidStatus = validTaskStatuses.includes(bid.Task.status);
-          console.log('Task status valid:', isValidStatus, 'for status:', bid.Task.status);
+          const isValidStatus = validTaskStatuses.includes(bid.task.status);
+          console.log('Task status valid:', isValidStatus, 'for status:', bid.task.status);
           
           return isValidStatus;
         })
         .map(bid => ({
-          ...bid.Task,
+          ...bid.task,
           bidAmount: bid.amount,
           bidEstimatedDays: bid.estimatedDays
         }));

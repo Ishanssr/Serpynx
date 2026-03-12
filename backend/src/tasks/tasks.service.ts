@@ -12,6 +12,34 @@ export class TasksService {
         private workPartCreatorService: WorkPartCreatorService
     ) { }
 
+    /**
+     * Transform Prisma's capitalized relation names to frontend-expected lowercase names.
+     * Prisma uses model names (User, Bid, Submission, Review, Team)
+     * but frontend expects (client, bids, freelancer, submission, review, team).
+     */
+    private transformTask(task: any): any {
+        if (!task) return task;
+        const { User, Bid, Submission, Review, _count, ...rest } = task;
+        return {
+            ...rest,
+            ...(User !== undefined && { client: User }),
+            ...(Bid !== undefined && { bids: (Bid || []).map((b: any) => this.transformBid(b)) }),
+            ...(Submission !== undefined && { submission: Submission }),
+            ...(Review !== undefined && { review: Review }),
+            ...(_count !== undefined && { _count: { bids: _count?.Bid ?? 0, ..._count } }),
+        };
+    }
+
+    private transformBid(bid: any): any {
+        if (!bid) return bid;
+        const { User, Team, ...rest } = bid;
+        return {
+            ...rest,
+            ...(User !== undefined && { freelancer: User }),
+            ...(Team !== undefined && { team: Team }),
+        };
+    }
+
     async create(clientId: string, dto: CreateTaskDto) {
         // Create the task first
         const task = await this.prisma.task.create({
@@ -97,7 +125,7 @@ export class TasksService {
         ]);
 
         return {
-            data: tasks,
+            data: tasks.map(t => this.transformTask(t)),
             meta: {
                 total,
                 page,
@@ -126,17 +154,18 @@ export class TasksService {
             },
         });
         if (!task || task.deletedAt) throw new NotFoundException('Task not found');
-        return task;
+        return this.transformTask(task);
     }
 
     async findByClient(clientId: string) {
-        return this.prisma.task.findMany({
+        const tasks = await this.prisma.task.findMany({
             where: { clientId, deletedAt: null },
             include: {
                 _count: { select: { Bid: true } },
             },
             orderBy: { createdAt: 'desc' },
         });
+        return tasks.map(t => this.transformTask(t));
     }
 
     async update(id: string, clientId: string, dto: UpdateTaskDto) {

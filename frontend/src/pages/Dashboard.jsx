@@ -97,10 +97,10 @@ export default function Dashboard() {
                                 </div>
                             </Link>
                         )) : data.map(bid => (
-                            <Link to={`/tasks/${bid.Task?.id}`} key={bid.id} style={{ textDecoration: 'none' }}>
+                            <Link to={`/tasks/${bid.task?.id}`} key={bid.id} style={{ textDecoration: 'none' }}>
                                 <div className="card">
                                     <div className="card-header">
-                                        <span className="card-title">{bid.Task?.title}</span>
+                                        <span className="card-title">{bid.task?.title}</span>
                                         <StatusBadge status={bid.status} />
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
@@ -108,7 +108,7 @@ export default function Dashboard() {
                                         <span className="card-meta">{bid.estimatedDays} days</span>
                                     </div>
                                     <div style={{ marginTop: 8 }}>
-                                        <SkillTags skills={bid.Task?.requiredSkills} />
+                                        <SkillTags skills={bid.task?.requiredSkills} />
                                     </div>
                                 </div>
                             </Link>

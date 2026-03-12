@@ -6,6 +6,17 @@ import { CreateBidDto } from './bids.dto';
 export class BidsService {
   constructor(private prisma: PrismaService) {}
 
+  private transformBid(bid: any): any {
+    if (!bid) return bid;
+    const { User, Task, Team, ...rest } = bid;
+    return {
+      ...rest,
+      ...(User !== undefined && { freelancer: User }),
+      ...(Task !== undefined && { task: Task }),
+      ...(Team !== undefined && { team: Team }),
+    };
+  }
+
   async createBid(taskId: string, freelancerId: string, dto: CreateBidDto) {
     // Check if task exists
     const task = await this.prisma.task.findUnique({
@@ -56,7 +67,7 @@ export class BidsService {
       }
     });
 
-    return bid;
+    return this.transformBid(bid);
   }
 
   async getTaskBids(taskId: string) {
@@ -76,7 +87,7 @@ export class BidsService {
       orderBy: { createdAt: 'desc' }
     });
 
-    return { data: bids };
+    return { data: bids.map(b => this.transformBid(b)) };
   }
 
   async getMyBids(freelancerId: string) {
@@ -95,6 +106,6 @@ export class BidsService {
       orderBy: { createdAt: 'desc' }
     });
 
-    return { data: bids };
+    return { data: bids.map(b => this.transformBid(b)) };
   }
 }

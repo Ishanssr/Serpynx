@@ -158,13 +158,13 @@ export default function TeamDetail() {
                 <div className="detail-section">
                     <h2>Recent Team Bids</h2>
                     {team.bids.map(bid => (
-                        <Link to={`/tasks/${bid.Task?.id}`} key={bid.id} style={{ textDecoration: 'none' }}>
+                        <Link to={`/tasks/${bid.task?.id}`} key={bid.id} style={{ textDecoration: 'none' }}>
                             <div className="bid-card">
                                 <div className="bid-header">
-                                    <span className="bid-freelancer">{bid.Task?.title}</span>
+                                    <span className="bid-freelancer">{bid.task?.title}</span>
                                     <span className="bid-amount">${bid.amount}</span>
                                 </div>
-                                <div className="card-meta">{bid.Task?.status}</div>
+                                <div className="card-meta">{bid.task?.status}</div>
                             </div>
                         </Link>
                     ))}
