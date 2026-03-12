@@ -78,4 +78,23 @@ export class BidsService {
 
     return bids;
   }
+
+  async getMyBids(freelancerId: string) {
+    const bids = await this.prisma.bid.findMany({
+      where: { freelancerId },
+      include: {
+        Task: {
+          select: {
+            id: true,
+            title: true,
+            budget: true,
+            status: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return bids;
+  }
 }
