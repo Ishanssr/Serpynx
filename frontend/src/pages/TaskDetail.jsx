@@ -154,7 +154,9 @@ export default function TaskDetail() {
                     </div>
                     <div className="detail-info-item">
                         <label>Posted by</label>
-                        <span>{task.client?.name}</span>
+                        <Link to={`/users/${task.clientId}`} style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>
+                            {task.client?.name || 'Unknown'}
+                        </Link>
                     </div>
                     <div className="detail-info-item">
                         <label>Total Bids</label>

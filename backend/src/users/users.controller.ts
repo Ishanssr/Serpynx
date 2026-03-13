@@ -77,16 +77,18 @@ export class UsersController {
 
         // Compute stats based on role
         let stats: any = {};
+        let tasks: any[] = [];
+
         if (user.role === 'FREELANCER') {
             const [completedTasks, activeBids, totalEarned, recentWork] = await Promise.all([
                 this.prisma.bid.count({ where: { freelancerId: id, status: 'ACCEPTED', Task: { status: 'COMPLETED' } } }),
                 this.prisma.bid.count({ where: { freelancerId: id, status: 'PENDING' } }),
                 this.prisma.bid.aggregate({ where: { freelancerId: id, status: 'ACCEPTED', Task: { status: 'COMPLETED' } }, _sum: { amount: true } }),
                 this.prisma.task.findMany({
-                    where: { Bid: { some: { freelancerId: id, status: 'ACCEPTED' } }, status: 'COMPLETED' },
-                    select: { id: true, title: true, budget: true, Review: { select: { rating: true } } },
+                    where: { Bid: { some: { freelancerId: id, status: 'ACCEPTED' } } },
+                    select: { id: true, title: true, budget: true, status: true, createdAt: true, Review: { select: { rating: true } } },
                     orderBy: { updatedAt: 'desc' },
-                    take: 5,
+                    take: 10,
                 }),
             ]);
             stats = {
@@ -96,11 +98,21 @@ export class UsersController {
                 recentWork: recentWork.map(w => ({ ...w, review: w.Review || null, Review: undefined })),
             };
         } else {
-            const [totalTasks, openTasks, completedTasks, totalSpent] = await Promise.all([
+            // Client profile — also fetch their tasks
+            const [totalTasks, openTasks, completedTasks, totalSpent, clientTasks] = await Promise.all([
                 this.prisma.task.count({ where: { clientId: id, deletedAt: null } }),
                 this.prisma.task.count({ where: { clientId: id, status: 'OPEN', deletedAt: null } }),
                 this.prisma.task.count({ where: { clientId: id, status: 'COMPLETED', deletedAt: null } }),
                 this.prisma.task.aggregate({ where: { clientId: id, status: 'COMPLETED', deletedAt: null }, _sum: { budget: true } }),
+                this.prisma.task.findMany({
+                    where: { clientId: id, deletedAt: null },
+                    select: {
+                        id: true, title: true, budget: true, status: true, createdAt: true,
+                        requiredSkills: true,
+                        _count: { select: { Bid: true } },
+                    },
+                    orderBy: { createdAt: 'desc' },
+                }),
             ]);
             stats = {
                 totalTasks,
@@ -108,8 +120,13 @@ export class UsersController {
                 completedTasks,
                 totalSpent: totalSpent._sum.budget || 0,
             };
+            tasks = clientTasks.map(t => ({
+                ...t,
+                bidCount: t._count?.Bid || 0,
+                _count: undefined,
+            }));
         }
 
-        return { ...user, stats };
+        return { ...user, stats, tasks };
     }
 }

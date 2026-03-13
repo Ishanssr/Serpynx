@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getPublicProfile, getConnectionStatus, sendChatRequest } from '../api/client';
-import { StarRating, SkillTags, Loading } from '../components/UI';
+import { StarRating, SkillTags, Loading, StatusBadge } from '../components/UI';
 
 export default function PublicProfile() {
     const { id } = useParams();
@@ -215,6 +215,41 @@ export default function PublicProfile() {
                     )}
                 </div>
             </div>
+
+            {/* Client's posted tasks */}
+            {!isFreelancer && profile.tasks?.length > 0 && (
+                <div className="card" style={{ marginTop: 24, maxWidth: 800 }}>
+                    <h3 style={{ marginTop: 0, marginBottom: 16 }}>📋 Posted Tasks</h3>
+                    <div style={{ display: 'grid', gap: 12 }}>
+                        {profile.tasks.map((task) => (
+                            <Link to={`/tasks/${task.id}`} key={task.id} style={{ textDecoration: 'none' }}>
+                                <div style={{
+                                    padding: '14px 16px',
+                                    borderRadius: 10,
+                                    border: '1px solid var(--border-color)',
+                                    background: 'var(--bg-secondary)',
+                                    transition: 'all 0.2s ease',
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                        <span style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)' }}>{task.title}</span>
+                                        <StatusBadge status={task.status} />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 16, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                        <span>💰 ${task.budget}</span>
+                                        <span>📝 {task.bidCount} bid{task.bidCount !== 1 ? 's' : ''}</span>
+                                        <span>{new Date(task.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    {task.requiredSkills?.length > 0 && (
+                                        <div style={{ marginTop: 8 }}>
+                                            <SkillTags skills={task.requiredSkills} />
+                                        </div>
+                                    )}
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
