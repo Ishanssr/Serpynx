@@ -23,19 +23,8 @@ export default function Chat() {
 
     useEffect(() => {
         fetchData();
-        // Connect WebSocket
-        const authToken = localStorage.getItem('serpynx_token');
-        const socket = io(`${API_URL}/chat`, { auth: { token: authToken } });
-        socketRef.current = socket;
-
-        socket.on('new_message', (msg) => {
-            setMessages(prev => [...prev, msg]);
-        });
-
-        socket.on('user_typing', () => setTyping(true));
-        socket.on('user_stop_typing', () => setTyping(false));
-
-        return () => { socket.disconnect(); };
+        // WebSocket disabled — no gateway on backend yet. Chat works via REST API.
+        return () => {};
     }, []);
 
     useEffect(() => {
