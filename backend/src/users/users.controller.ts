@@ -74,6 +74,42 @@ export class UsersController {
         if (!user) {
             throw new Error('User not found');
         }
-        return user;
+
+        // Compute stats based on role
+        let stats: any = {};
+        if (user.role === 'FREELANCER') {
+            const [completedTasks, activeBids, totalEarned, recentWork] = await Promise.all([
+                this.prisma.bid.count({ where: { freelancerId: id, status: 'ACCEPTED', Task: { status: 'COMPLETED' } } }),
+                this.prisma.bid.count({ where: { freelancerId: id, status: 'PENDING' } }),
+                this.prisma.bid.aggregate({ where: { freelancerId: id, status: 'ACCEPTED', Task: { status: 'COMPLETED' } }, _sum: { amount: true } }),
+                this.prisma.task.findMany({
+                    where: { Bid: { some: { freelancerId: id, status: 'ACCEPTED' } }, status: 'COMPLETED' },
+                    select: { id: true, title: true, budget: true, Review: { select: { rating: true } } },
+                    orderBy: { updatedAt: 'desc' },
+                    take: 5,
+                }),
+            ]);
+            stats = {
+                completedTasks,
+                activeBids,
+                totalEarned: totalEarned._sum.amount || 0,
+                recentWork: recentWork.map(w => ({ ...w, review: w.Review || null, Review: undefined })),
+            };
+        } else {
+            const [totalTasks, openTasks, completedTasks, totalSpent] = await Promise.all([
+                this.prisma.task.count({ where: { clientId: id, deletedAt: null } }),
+                this.prisma.task.count({ where: { clientId: id, status: 'OPEN', deletedAt: null } }),
+                this.prisma.task.count({ where: { clientId: id, status: 'COMPLETED', deletedAt: null } }),
+                this.prisma.task.aggregate({ where: { clientId: id, status: 'COMPLETED', deletedAt: null }, _sum: { budget: true } }),
+            ]);
+            stats = {
+                totalTasks,
+                openTasks,
+                completedTasks,
+                totalSpent: totalSpent._sum.budget || 0,
+            };
+        }
+
+        return { ...user, stats };
     }
 }

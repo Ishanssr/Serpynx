@@ -19,7 +19,8 @@ export default function ClientDashboard() {
       const res = await getMyTasks();
       console.log('Tasks response:', res.data);
       
-      const tasks = res.data.filter(task => task.status === 'ASSIGNED' || task.status === 'IN_REVIEW' || task.status === 'COMPLETED');
+      const rawData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const tasks = rawData.filter(task => task.status === 'ASSIGNED' || task.status === 'IN_REVIEW' || task.status === 'COMPLETED');
       console.log('Filtered tasks:', tasks);
       setTasks(tasks);
       
