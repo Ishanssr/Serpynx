@@ -89,7 +89,7 @@ export default function PublicProfile() {
 
                     {!isOwnProfile && (
                         <div style={{ marginBottom: 16 }}>
-                            {connection?.status === 'ACCEPTED' ? (
+                            {(connection?.status === 'ACCEPTED' || connection?.status === 'CONNECTED') ? (
                                 <Link
                                     to={connection.conversationId ? `/chat/${connection.conversationId}` : '/chat'}
                                     className="connect-btn connected"
@@ -99,10 +99,10 @@ export default function PublicProfile() {
                             ) : connection?.status === 'PENDING' ? (
                                 <button
                                     type="button"
-                                    className={`connect-btn ${connection.direction === 'SENT' ? 'pending' : ''}`}
+                                    className={`connect-btn ${connection.isSender ? 'pending' : ''}`}
                                     disabled
                                 >
-                                    {connection.direction === 'SENT' ? 'Request pending' : 'Request received'}
+                                    {connection.isSender ? 'Request pending' : 'Request received'}
                                 </button>
                             ) : (
                                 <button

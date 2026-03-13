@@ -226,6 +226,17 @@ export class ChatController {
             data: { updatedAt: new Date() },
         });
 
+        // Notify the other user about the new message
+        const receiverId = conversation.user1Id === req.user.id
+            ? conversation.user2Id : conversation.user1Id;
+        const senderName = message.User?.name || 'Someone';
+        this.notificationsService.create({
+            userId: receiverId,
+            type: 'NEW_MESSAGE',
+            message: `${senderName}: ${body.content.length > 50 ? body.content.slice(0, 50) + '...' : body.content}`,
+            link: `/chat`,
+        }).catch(err => console.error('Failed to send message notification:', err));
+
         return { ...message, sender: message.User, User: undefined };
     }
 

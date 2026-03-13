@@ -83,6 +83,10 @@ export default function NotificationBell() {
         WORK_SUBMITTED: '📦',
         REVIEW_RECEIVED: '⭐',
         TASK_ASSIGNED: '🚀',
+        TASK_STANDBY_ASSIGNED: '⏳',
+        TASK_STANDBY_PROMOTED: '🔥',
+        CONNECT_REQUEST: '🤝',
+        NEW_MESSAGE: '💬',
     };
 
     return (
