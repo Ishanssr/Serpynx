@@ -13,6 +13,9 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { FilesModule } from './files/files.module';
 import { WorkPartsModule } from './work-parts/work-parts.module';
+import { UsersModule } from './users/users.module';
+import { TeamsModule } from './teams/teams.module';
+import { ChatModule } from './chat/chat.module';
 import { HealthController } from './common/health.controller';
 
 @Module({
@@ -31,9 +34,11 @@ import { HealthController } from './common/health.controller';
     MatchingModule,
     NotificationsModule,
     UploadsModule,
-    // ChatModule, // Not yet implemented
     FilesModule,
     WorkPartsModule,
+    UsersModule,
+    TeamsModule,
+    ChatModule,
   ],
   controllers: [HealthController],
   providers: [
