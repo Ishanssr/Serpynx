@@ -54,11 +54,23 @@ export default function Chat() {
 
     const fetchData = async () => {
         try {
-            const [convosRes, reqsRes] = await Promise.all([getConversations(), getChatRequests()]);
-            setConversations(convosRes.data);
-            setRequests(reqsRes.data);
+            const [convosRes, reqsRes] = await Promise.all([
+                getConversations().catch(() => ({ data: [] })),
+                getChatRequests().catch(() => ({ data: [] })),
+            ]);
+            const convos = Array.isArray(convosRes.data) ? convosRes.data : [];
+            setConversations(convos);
+
+            // Chat requests come as a flat array — split into received/sent
+            const allRequests = Array.isArray(reqsRes.data) ? reqsRes.data : [];
+            setRequests({
+                received: allRequests.filter(r => r.receiverId === user?.id && r.status === 'PENDING'),
+                sent: allRequests.filter(r => r.senderId === user?.id),
+            });
         } catch (err) {
             console.error(err);
+            setConversations([]);
+            setRequests({ received: [], sent: [] });
         } finally {
             setLoading(false);
         }
@@ -67,9 +79,11 @@ export default function Chat() {
     const loadMessages = async (convoId) => {
         try {
             const res = await getMessages(convoId);
-            setMessages(Array.isArray(res.data) ? res.data : []);
+            const msgs = res.data;
+            setMessages(Array.isArray(msgs) ? msgs : (msgs?.data || []));
         } catch (err) {
             console.error(err);
+            setMessages([]);
         }
     };
 

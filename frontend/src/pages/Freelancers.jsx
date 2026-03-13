@@ -14,13 +14,14 @@ export default function Freelancers() {
     const fetchFreelancers = useCallback(async (page = 1) => {
         setLoading(true);
         try {
-            const params = { page, limit: 12, sortBy };
+            const params = { page, limit: 12, sort: sortBy };
             if (search) params.search = search;
             const res = await searchFreelancers(params);
-            setFreelancers(res.data.data);
-            setMeta(res.data.meta);
+            setFreelancers(Array.isArray(res.data?.data) ? res.data.data : []);
+            setMeta(res.data?.meta || { total: 0, page: 1, totalPages: 0 });
         } catch (err) {
             console.error(err);
+            setFreelancers([]);
         }
         setLoading(false);
     }, [search, sortBy]);
