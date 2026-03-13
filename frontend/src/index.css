@@ -1777,9 +1777,12 @@ a:hover {
   color: var(--success);
 }
 
-.connect-btn.pending {
-  border-color: var(--warning);
-  color: var(--warning);
+.connect-btn.pending,
+.connect-btn:disabled {
+  border-color: var(--warning, #f59e0b);
+  color: var(--warning, #f59e0b);
+  cursor: default;
+  opacity: 0.85;
 }
 
 [data-theme="light"] .chat-msg.sent .chat-bubble {

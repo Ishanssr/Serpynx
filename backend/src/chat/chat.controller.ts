@@ -4,11 +4,15 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('api/chat')
 export class ChatController {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private notificationsService: NotificationsService,
+    ) {}
 
     // Send a chat request to another user
     @Post('request')
@@ -38,13 +42,24 @@ export class ChatController {
         });
         if (existingConvo) throw new ForbiddenException('You already have a conversation with this user');
 
-        return this.prisma.chatRequest.create({
+        const chatRequest = await this.prisma.chatRequest.create({
             data: { senderId: req.user.id, receiverId: body.receiverId },
             include: {
                 User_ChatRequest_receiverIdToUser: { select: { id: true, name: true } },
                 User_ChatRequest_senderIdToUser: { select: { id: true, name: true } },
             },
         });
+
+        // Notify the receiver about the connect request
+        const senderName = chatRequest.User_ChatRequest_senderIdToUser?.name || 'Someone';
+        this.notificationsService.create({
+            userId: body.receiverId,
+            type: 'CONNECT_REQUEST',
+            message: `${senderName} sent you a connection request`,
+            link: `/chat`,
+        }).catch(err => console.error('Failed to send connect notification:', err));
+
+        return chatRequest;
     }
 
     // Get pending chat requests for the current user

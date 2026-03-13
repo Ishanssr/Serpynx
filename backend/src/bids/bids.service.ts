@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateBidDto } from './bids.dto';
 
 @Injectable()
 export class BidsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   private transformBid(bid: any): any {
     if (!bid) return bid;
@@ -66,6 +70,11 @@ export class BidsService {
         }
       }
     });
+
+    // Notify the client that a new bid was received
+    const freelancerName = bid.User?.name || 'A freelancer';
+    this.notificationsService.notifyBidReceived(task.clientId, freelancerName, taskId, task.title)
+      .catch(err => console.error('Failed to send bid notification:', err));
 
     return this.transformBid(bid);
   }
