@@ -1,7 +1,9 @@
 import {
   Controller,
   Get,
+  Patch,
   Param,
+  Body,
   UseGuards,
   Request,
   NotFoundException
@@ -9,12 +11,12 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { WorkPartsService } from './work-parts.service';
 
-@Controller('tasks')
+@Controller('api')
 @UseGuards(AuthGuard('jwt'))
 export class WorkPartsController {
   constructor(private readonly workPartsService: WorkPartsService) {}
 
-  @Get(':taskId/work-parts')
+  @Get('tasks/:taskId/work-parts')
   async getWorkPartsForTask(@Param('taskId') taskId: string, @Request() req) {
     try {
       return this.workPartsService.getWorkPartsForTask(taskId, req.user.id);
@@ -22,8 +24,25 @@ export class WorkPartsController {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      // Return empty array if there are no work parts or other issues
       return [];
     }
+  }
+
+  @Patch('work-parts/:id')
+  async updateWorkPart(
+    @Param('id') id: string,
+    @Body() body: { status?: string; content?: string },
+    @Request() req,
+  ) {
+    return this.workPartsService.updateWorkPart(id, req.user.id, body);
+  }
+
+  @Patch('work-parts/:id/review')
+  async reviewWorkPart(
+    @Param('id') id: string,
+    @Body() body: { status: string; feedback?: string },
+    @Request() req,
+  ) {
+    return this.workPartsService.reviewWorkPart(id, req.user.id, body);
   }
 }

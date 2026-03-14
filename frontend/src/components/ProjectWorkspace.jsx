@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { getWorkParts, updateWorkPart, uploadWorkFile, getWorkFiles, deleteWorkFile } from '../api/client';
+import { useState, useEffect, useRef } from 'react';
+import { getWorkParts, updateWorkPart, reviewWorkPart } from '../api/client';
 import { StatusBadge } from './UI';
 
 const WorkPartStatus = {
@@ -13,38 +13,33 @@ const WorkPartStatus = {
 export default function ProjectWorkspace({ taskId, user }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [workParts, setWorkParts] = useState([]);
-  const [messages, setMessages] = useState([]);
-  const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [expandedPart, setExpandedPart] = useState(null);
-  const [uploadingFiles, setUploadingFiles] = useState({});
-  const [newMessage, setNewMessage] = useState('');
-  const [newWorkPart, setNewWorkPart] = useState({ title: '', description: '', order: 0 });
+  const [noteText, setNoteText] = useState({});
+  const successTimer = useRef(null);
 
   const isClient = user.role === 'CLIENT';
   const isFreelancer = user.role === 'FREELANCER';
 
   useEffect(() => {
     fetchWorkParts();
-    fetchMessages();
-    fetchActivity();
   }, [taskId]);
+
+  // Auto-clear success message
+  useEffect(() => {
+    if (success) {
+      if (successTimer.current) clearTimeout(successTimer.current);
+      successTimer.current = setTimeout(() => setSuccess(''), 3000);
+    }
+  }, [success]);
 
   const fetchWorkParts = async () => {
     try {
-      console.log('Fetching work parts for task:', taskId);
       const res = await getWorkParts(taskId);
-      console.log('Work parts fetched:', res.data);
-      
-      // Handle empty response or no work parts
-      if (!res.data || res.data.length === 0) {
-        setWorkParts([]);
-        setError('');
-      } else {
-        setWorkParts(res.data);
-      }
+      setWorkParts(Array.isArray(res.data) ? res.data : []);
+      setError('');
     } catch (err) {
       console.error('Failed to fetch work parts:', err);
       setError(err.response?.data?.message || 'Failed to fetch work parts');
@@ -54,878 +49,351 @@ export default function ProjectWorkspace({ taskId, user }) {
     }
   };
 
-  const fetchMessages = async () => {
-    try {
-      // TODO: Implement API call for project messages
-      // const res = await getProjectMessages(taskId);
-      // setMessages(res.data);
-    } catch (err) {
-      console.error('Failed to fetch messages:', err);
-    }
-  };
-
-  const fetchActivity = async () => {
-    try {
-      // TODO: Implement API call for activity log
-      // const res = await getActivityLog(taskId);
-      // setActivity(res.data);
-    } catch (err) {
-      console.error('Failed to fetch activity:', err);
-    }
-  };
-
   const handleStatusUpdate = async (workPartId, status) => {
     try {
       setError('');
-      setSuccess('');
-      
       await updateWorkPart(workPartId, { status });
-      
-      // Update local state
-      setWorkParts(prev => prev.map(part => 
-        part.id === workPartId ? { ...part, status } : part
+      setWorkParts(prev => prev.map(p =>
+        p.id === workPartId ? { ...p, status, ...(status === 'SUBMITTED' ? { submittedAt: new Date().toISOString() } : {}) } : p
       ));
-      
-      setSuccess('Work part status updated successfully');
+      setSuccess(`Milestone ${status === 'IN_PROGRESS' ? 'started' : status === 'SUBMITTED' ? 'submitted for review' : 'updated'}!`);
     } catch (err) {
-      console.error('Failed to update work part:', err);
-      setError(err.response?.data?.message || 'Failed to update work part');
+      setError(err.response?.data?.message || 'Failed to update status');
     }
   };
 
-  const handleFileUpload = async (workPartId, file) => {
+  const handleSubmitContent = async (workPartId) => {
+    const content = noteText[workPartId];
+    if (!content?.trim()) return;
     try {
       setError('');
-      setSuccess('');
-      
-      setUploadingFiles(prev => ({ ...prev, [workPartId]: true }));
-      
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      // TODO: Implement API call for file upload
-      // await uploadWorkFile(workPartId, formData);
-      
-      setSuccess('File uploaded successfully');
-      fetchWorkParts(); // Refresh work parts to show new files
+      await updateWorkPart(workPartId, { content });
+      setWorkParts(prev => prev.map(p =>
+        p.id === workPartId ? { ...p, content } : p
+      ));
+      setNoteText(prev => ({ ...prev, [workPartId]: '' }));
+      setSuccess('Work update saved!');
     } catch (err) {
-      console.error('Failed to upload file:', err);
-      setError(err.response?.data?.message || 'Failed to upload file');
-    } finally {
-      setUploadingFiles(prev => ({ ...prev, [workPartId]: false }));
+      setError(err.response?.data?.message || 'Failed to save update');
     }
   };
 
-  const handleFileDelete = async (workPartId, fileId) => {
+  const handleReview = async (workPartId, status, feedback = '') => {
     try {
       setError('');
-      setSuccess('');
-      
-      // TODO: Implement API call for file deletion
-      // await deleteWorkFile(fileId);
-      
-      setSuccess('File deleted successfully');
-      fetchWorkParts(); // Refresh work parts
+      await reviewWorkPart(workPartId, { status, feedback });
+      setWorkParts(prev => prev.map(p =>
+        p.id === workPartId ? { ...p, status, feedback: feedback || p.feedback, reviewedAt: new Date().toISOString() } : p
+      ));
+      setSuccess(status === 'APPROVED' ? 'Milestone approved!' : 'Revision requested!');
     } catch (err) {
-      console.error('Failed to delete file:', err);
-      setError(err.response?.data?.message || 'Failed to delete file');
+      setError(err.response?.data?.message || 'Failed to submit review');
     }
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
+  if (loading) return <div style={{ padding: 24, color: 'var(--text-muted)' }}>Loading work parts...</div>;
 
-    try {
-      setError('');
-      
-      // TODO: Implement API call for sending message
-      // await sendMessage(taskId, newMessage);
-      
-      setNewMessage('');
-      fetchMessages(); // Refresh messages
-    } catch (err) {
-      console.error('Failed to send message:', err);
-      setError(err.response?.data?.message || 'Failed to send message');
-    }
-  };
+  const completedParts = workParts.filter(p => p.status === 'APPROVED').length;
+  const totalParts = workParts.length;
+  const progressPct = totalParts > 0 ? Math.round((completedParts / totalParts) * 100) : 0;
 
-  const handleCreateWorkPart = async (e) => {
-    e.preventDefault();
-    if (!newWorkPart.title.trim() || !newWorkPart.description.trim()) return;
-
-    try {
-      setError('');
-      
-      // TODO: Implement API call for creating work part
-      // await createWorkPart(taskId, newWorkPart);
-      
-      setNewWorkPart({ title: '', description: '', order: 0 });
-      fetchWorkParts(); // Refresh work parts
-      setSuccess('Work part created successfully');
-    } catch (err) {
-      console.error('Failed to create work part:', err);
-      setError(err.response?.data?.message || 'Failed to create work part');
-    }
-  };
+  if (workParts.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: 40 }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>📋</div>
+        <h3>No milestones yet</h3>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          Milestones will appear once the task assignment is fully processed.
+        </p>
+        <button className="btn btn-primary" onClick={fetchWorkParts} style={{ marginTop: 12 }}>
+          Refresh
+        </button>
+      </div>
+    );
+  }
 
   const renderOverview = () => (
     <div>
-      <h3 style={{ marginBottom: 24 }}>Project Overview</h3>
-      
-      {/* Project Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent)' }}>{workParts.length}</div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: 4 }}>Total Milestones</div>
+      {/* Progress Bar */}
+      <div style={{ backgroundColor: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border-color)', marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+          <span style={{ fontWeight: 600 }}>Overall Progress</span>
+          <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{progressPct}%</span>
         </div>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--success)' }}>
-            {workParts.filter(part => part.status === 'APPROVED').length}
-          </div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: 4 }}>Completed</div>
+        <div style={{ height: 10, backgroundColor: 'var(--bg-secondary)', borderRadius: 5, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${progressPct}%`, backgroundColor: 'var(--success)', borderRadius: 5, transition: 'width 0.4s ease' }} />
         </div>
-        <div style={{ backgroundColor: 'var(--bg-card)', padding: 20, borderRadius: 12, border: '1px solid var(--border-color)' }}>
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--warning)' }}>
-            {workParts.filter(part => part.status === 'IN_PROGRESS').length}
-          </div>
-          <div style={{ color: 'var(--text-secondary)', marginTop: 4 }}>In Progress</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+          <span>{completedParts} of {totalParts} milestones completed</span>
+          <span>{workParts.filter(p => p.status === 'IN_PROGRESS').length} in progress</span>
         </div>
       </div>
 
-      {/* Progress Overview */}
-      <div style={{ backgroundColor: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border-color)' }}>
-        <h4 style={{ marginBottom: 16 }}>Progress Overview</h4>
-        {workParts.map((part, index) => (
-          <div key={part.id} style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ 
-              width: 24, 
-              height: 24, 
-              borderRadius: '50%', 
-              backgroundColor: part.status === 'APPROVED' ? 'var(--success)' : 
-                             part.status === 'IN_PROGRESS' ? 'var(--warning)' : 'var(--text-muted)',
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: '0.75rem',
-              fontWeight: 'bold'
-            }}>
-              {index + 1}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>{part.title}</div>
-              <StatusBadge status={part.status} />
-            </div>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
+        {[
+          { label: 'Total', value: totalParts, color: 'var(--accent)', icon: '📋' },
+          { label: 'Completed', value: completedParts, color: 'var(--success)', icon: '✅' },
+          { label: 'In Progress', value: workParts.filter(p => p.status === 'IN_PROGRESS').length, color: 'var(--warning)', icon: '🔄' },
+          { label: 'Awaiting Review', value: workParts.filter(p => p.status === 'SUBMITTED').length, color: '#f59e0b', icon: '⏳' },
+        ].map((s, i) => (
+          <div key={i} style={{ backgroundColor: 'var(--bg-card)', padding: 16, borderRadius: 10, border: '1px solid var(--border-color)', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.5rem' }}>{s.icon}</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{s.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* Timeline */}
+      <div style={{ backgroundColor: 'var(--bg-card)', padding: 24, borderRadius: 12, border: '1px solid var(--border-color)' }}>
+        <h4 style={{ marginBottom: 16 }}>Milestone Timeline</h4>
+        {workParts.map((part, i) => {
+          const statusInfo = WorkPartStatus[part.status] || WorkPartStatus.NOT_STARTED;
+          return (
+            <div key={part.id} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: i < workParts.length - 1 ? 16 : 0 }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%',
+                backgroundColor: statusInfo.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0,
+              }}>{i + 1}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, marginBottom: 2 }}>{part.title}</div>
+                <span style={{
+                  padding: '2px 8px', borderRadius: 4, fontSize: '0.7rem', fontWeight: 600,
+                  backgroundColor: statusInfo.color + '20', color: statusInfo.color,
+                }}>{statusInfo.label}</span>
+              </div>
+              {i < workParts.length - 1 && (
+                <div style={{ position: 'absolute', left: 37, width: 2, height: 16, backgroundColor: 'var(--border-color)' }} />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 
   const renderMilestones = () => (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h3>Milestones</h3>
-        {isClient && (
-          <button className="btn btn-primary" onClick={() => setActiveTab('create-milestone')}>
-            + Add Milestone
-          </button>
-        )}
-      </div>
+      <h3 style={{ marginBottom: 20 }}>Milestones ({totalParts})</h3>
+      {workParts.map((part, i) => {
+        const statusInfo = WorkPartStatus[part.status] || WorkPartStatus.NOT_STARTED;
+        const isExpanded = expandedPart === part.id;
 
-      {workParts.map((part, index) => (
-        <div key={part.id} style={{ 
-          backgroundColor: 'var(--bg-card)', 
-          borderRadius: 12, 
-          border: '1px solid var(--border-color)', 
-          marginBottom: 16,
-          overflow: 'hidden'
-        }}>
-          <div 
-            style={{ 
-              padding: 20, 
-              cursor: 'pointer',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}
-            onClick={() => setExpandedPart(expandedPart === part.id ? null : part.id)}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ 
-                width: 32, 
-                height: 32, 
-                borderRadius: '50%', 
-                backgroundColor: part.status === 'APPROVED' ? 'var(--success)' : 
-                               part.status === 'IN_PROGRESS' ? 'var(--warning)' : 'var(--text-muted)',
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                color: 'white',
-                fontSize: '0.875rem',
-                fontWeight: 'bold'
-              }}>
-                {index + 1}
-              </div>
-              <div>
-                <h4 style={{ margin: 0, marginBottom: 4 }}>{part.title}</h4>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{part.description}</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <StatusBadge status={part.status} />
-              <span style={{ color: 'var(--text-muted)' }}>
-                {expandedPart === part.id ? '▼' : '▶'}
-              </span>
-            </div>
-          </div>
-
-          {expandedPart === part.id && (
-            <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--border-color)' }}>
-              {/* Freelancer Actions */}
-              {isFreelancer && (
-                <div style={{ marginBottom: 16 }}>
-                  {part.status === 'NOT_STARTED' && (
-                    <button 
-                      className="btn btn-primary"
-                      onClick={() => handleStatusUpdate(part.id, 'IN_PROGRESS')}
-                      style={{ marginRight: 8 }}
-                    >
-                      Start Working
-                    </button>
-                  )}
-                  {part.status === 'IN_PROGRESS' && (
-                    <button 
-                      className="btn btn-primary"
-                      onClick={() => handleStatusUpdate(part.id, 'SUBMITTED')}
-                      style={{ marginRight: 8 }}
-                    >
-                      Submit for Review
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Client Actions */}
-              {isClient && part.status === 'SUBMITTED' && (
-                <div style={{ marginBottom: 16 }}>
-                  <button 
-                    className="btn btn-success"
-                    onClick={() => handleStatusUpdate(part.id, 'APPROVED')}
-                    style={{ marginRight: 8 }}
-                  >
-                    Approve
-                  </button>
-                  <button 
-                    className="btn btn-secondary"
-                    onClick={() => handleStatusUpdate(part.id, 'REVISION_REQUIRED')}
-                  >
-                    Request Revision
-                  </button>
-                </div>
-              )}
-
-              {/* Files Section */}
-              <div style={{ marginBottom: 16 }}>
-                <h5 style={{ marginBottom: 8 }}>Files</h5>
-                {isFreelancer && (
-                  <div style={{ 
-                    border: '2px dashed var(--border-color)',
-                    borderRadius: 12,
-                    padding: 24,
-                    textAlign: 'center',
-                    backgroundColor: 'var(--bg-card)',
-                    marginBottom: 16,
-                    cursor: 'pointer'
-                  }}>
-                    <input
-                      type="file"
-                      id={`file-upload-${part.id}`}
-                      style={{ display: 'none' }}
-                      onChange={(e) => e.target.files[0] && handleFileUpload(part.id, e.target.files[0])}
-                      disabled={uploadingFiles[part.id]}
-                    />
-                    <label htmlFor={`file-upload-${part.id}`} style={{ cursor: 'pointer' }}>
-                      <div style={{ fontSize: '2rem', marginBottom: 8 }}>📁</div>
-                      <div style={{ color: 'var(--text-primary)' }}>
-                        {uploadingFiles[part.id] ? 'Uploading...' : 'Click to upload files'}
-                      </div>
-                      <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: 4 }}>
-                        Supports: PDF, ZIP, Images, Code files
-                      </div>
-                    </label>
-                  </div>
-                )}
-
-                {/* Existing Files */}
-                {part.files && part.files.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {part.files.map((file) => (
-                      <div key={file.id} style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        padding: 12,
-                        backgroundColor: 'var(--bg-card)',
-                        borderRadius: 12,
-                        border: '1px solid var(--border-color)'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>
-                            {file.filename.endsWith('.pdf') ? '📄' : 
-                             file.filename.endsWith('.zip') ? '📦' :
-                             file.filename.endsWith('.js') || file.filename.endsWith('.jsx') ? '📜' :
-                             file.filename.endsWith('.css') ? '🎨' :
-                             file.filename.endsWith('.html') ? '🌐' : '📄'}
-                          </div>
-                          <div>
-                            <div style={{ fontWeight: 500 }}>{file.originalName}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                              {(file.size / 1024).toFixed(1)} KB
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <a 
-                            href={`/api/files/${file.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-secondary btn-sm"
-                            style={{ textDecoration: 'none' }}
-                          >
-                            🔗 View
-                          </a>
-                          {isFreelancer && (
-                            <button 
-                              className="btn btn-secondary btn-sm"
-                              onClick={() => handleFileDelete(part.id, file.id)}
-                              style={{ backgroundColor: 'var(--bg-card-hover)', color: 'var(--danger)', border: '1px solid var(--danger)' }}
-                            >
-                              🗑️ Delete
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Work Content */}
-              {part.content && (
-                <div style={{ marginBottom: 16 }}>
-                  <h5 style={{ marginBottom: 8 }}>Work Update:</h5>
-                  <div style={{ 
-                    padding: 12, 
-                    backgroundColor: 'var(--bg-card)', 
-                    borderRadius: 12,
-                    border: '1px solid var(--border-color)',
-                    whiteSpace: 'pre-wrap',
-                    color: 'var(--text-primary)'
-                  }}>
-                    {part.content}
-                  </div>
-                </div>
-              )}
-
-              {/* Client Feedback */}
-              {part.feedback && (
-                <div style={{ marginBottom: 16 }}>
-                  <h5 style={{ marginBottom: 8 }}>Client Feedback:</h5>
-                  <div style={{ 
-                    padding: 12, 
-                    backgroundColor: 'var(--bg-card)', 
-                    borderRadius: 12,
-                    border: '1px solid var(--border-color)',
-                    borderLeft: '4px solid var(--danger)',
-                    color: 'var(--text-primary)'
-                  }}>
-                    {part.feedback}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderFiles = () => (
-    <div>
-      <h3 style={{ marginBottom: 24 }}>Project Files</h3>
-      
-      {/* File Upload Area */}
-      {isFreelancer && (
-        <div style={{ 
-          border: '2px dashed var(--border-color)',
-          borderRadius: 12,
-          padding: 48,
-          textAlign: 'center',
-          backgroundColor: 'var(--bg-card)',
-          marginBottom: 32
-        }}>
-          <div style={{ fontSize: '3rem', marginBottom: 16 }}>📁</div>
-          <h4 style={{ marginBottom: 8 }}>Upload Project Files</h4>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
-            Drag and drop files here or click to browse
-          </p>
-          <button className="btn btn-primary">
-            Choose Files
-          </button>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: 16 }}>
-            Maximum file size: 10MB. Supported formats: PDF, ZIP, Images, Code files
-          </p>
-        </div>
-      )}
-
-      {/* Files List */}
-      <div>
-        <h4 style={{ marginBottom: 16 }}>All Files</h4>
-        {workParts.flatMap(part => part.files || []).map((file) => (
-          <div key={file.id} style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            padding: 16,
-            backgroundColor: 'var(--bg-card)',
-            borderRadius: 12,
-            border: '1px solid var(--border-color)',
-            marginBottom: 12
+        return (
+          <div key={part.id} style={{
+            backgroundColor: 'var(--bg-card)', borderRadius: 12,
+            border: isExpanded ? '1px solid var(--accent)' : '1px solid var(--border-color)',
+            marginBottom: 12, overflow: 'hidden', transition: 'border-color 0.2s',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>
-                {file.filename.endsWith('.pdf') ? '📄' : 
-                 file.filename.endsWith('.zip') ? '📦' :
-                 file.filename.endsWith('.js') || file.filename.endsWith('.jsx') ? '📜' :
-                 file.filename.endsWith('.css') ? '🎨' :
-                 file.filename.endsWith('.html') ? '🌐' : '📄'}
-              </div>
-              <div>
-                <div style={{ fontWeight: 600, marginBottom: 4 }}>{file.originalName}</div>
-                <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                  {(file.size / 1024).toFixed(1)} KB • Uploaded {new Date(file.uploadedAt).toLocaleDateString()}
+            {/* Header */}
+            <div
+              style={{ padding: 16, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              onClick={() => setExpandedPart(isExpanded ? null : part.id)}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: '50%', backgroundColor: statusInfo.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontWeight: 700, fontSize: '0.85rem',
+                }}>{i + 1}</div>
+                <div>
+                  <div style={{ fontWeight: 600 }}>{part.title}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 2 }}>{part.description}</div>
                 </div>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{
+                  padding: '3px 10px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 600,
+                  backgroundColor: statusInfo.color + '20', color: statusInfo.color,
+                }}>{statusInfo.label}</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>{isExpanded ? '▼' : '▶'}</span>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <a 
-                href={`/api/files/${file.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-secondary btn-sm"
-                style={{ textDecoration: 'none' }}
-              >
-                🔗 View
-              </a>
-              <button className="btn btn-secondary btn-sm">
-                ⬇ Download
-              </button>
-            </div>
+
+            {/* Expanded Content */}
+            {isExpanded && (
+              <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--border-color)' }}>
+                {/* Freelancer Actions */}
+                {isFreelancer && (
+                  <div style={{ marginTop: 12, marginBottom: 12 }}>
+                    {part.status === 'NOT_STARTED' && (
+                      <button className="btn btn-primary btn-sm" onClick={() => handleStatusUpdate(part.id, 'IN_PROGRESS')}>
+                        🚀 Start Working
+                      </button>
+                    )}
+                    {(part.status === 'IN_PROGRESS' || part.status === 'REVISION_REQUIRED') && (
+                      <div>
+                        <div style={{ marginBottom: 8 }}>
+                          <textarea
+                            value={noteText[part.id] || ''}
+                            onChange={e => setNoteText(prev => ({ ...prev, [part.id]: e.target.value }))}
+                            placeholder="Add a work update or note about your progress..."
+                            rows={3}
+                            style={{
+                              width: '100%', padding: 10, borderRadius: 8,
+                              border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)',
+                              color: 'var(--text-primary)', resize: 'vertical', fontSize: '0.85rem',
+                            }}
+                          />
+                          <button className="btn btn-secondary btn-sm" onClick={() => handleSubmitContent(part.id)} style={{ marginTop: 6 }}>
+                            💾 Save Update
+                          </button>
+                        </div>
+                        <button className="btn btn-success btn-sm" onClick={() => handleStatusUpdate(part.id, 'SUBMITTED')} style={{ marginTop: 4 }}>
+                          📤 Submit for Review
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Client Actions */}
+                {isClient && part.status === 'SUBMITTED' && (
+                  <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                    <button className="btn btn-success btn-sm" onClick={() => handleReview(part.id, 'APPROVED')}>
+                      ✅ Approve
+                    </button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => {
+                      const feedback = prompt('Enter feedback for the freelancer:');
+                      if (feedback) handleReview(part.id, 'REVISION_REQUIRED', feedback);
+                    }}>
+                      🔄 Request Revision
+                    </button>
+                  </div>
+                )}
+
+                {/* Work Content */}
+                {part.content && (
+                  <div style={{ marginTop: 12 }}>
+                    <h5 style={{ marginBottom: 6, fontSize: '0.85rem' }}>📝 Freelancer Update:</h5>
+                    <div style={{
+                      padding: 12, backgroundColor: 'var(--bg-secondary)', borderRadius: 8,
+                      border: '1px solid var(--border-color)', whiteSpace: 'pre-wrap',
+                      fontSize: '0.85rem', lineHeight: 1.5,
+                    }}>{part.content}</div>
+                  </div>
+                )}
+
+                {/* Client Feedback */}
+                {part.feedback && (
+                  <div style={{ marginTop: 12 }}>
+                    <h5 style={{ marginBottom: 6, fontSize: '0.85rem' }}>💬 Client Feedback:</h5>
+                    <div style={{
+                      padding: 12, backgroundColor: 'var(--bg-secondary)', borderRadius: 8,
+                      border: '1px solid var(--border-color)', borderLeft: '4px solid var(--danger)',
+                      whiteSpace: 'pre-wrap', fontSize: '0.85rem', lineHeight: 1.5,
+                    }}>{part.feedback}</div>
+                  </div>
+                )}
+
+                {/* Timestamps */}
+                <div style={{ marginTop: 12, fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: 16 }}>
+                  {part.submittedAt && <span>Submitted: {new Date(part.submittedAt).toLocaleDateString()}</span>}
+                  {part.reviewedAt && <span>Reviewed: {new Date(part.reviewedAt).toLocaleDateString()}</span>}
+                </div>
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 
-  const renderChat = () => (
-    <div>
-      <h3 style={{ marginBottom: 24 }}>Project Chat</h3>
-      
-      {/* Chat Messages */}
-      <div style={{ 
-        backgroundColor: 'var(--bg-card)', 
-        borderRadius: 12, 
-        border: '1px solid var(--border-color)',
-        height: 400,
-        display: 'flex',
-        flexDirection: 'column',
-        marginBottom: 16
-      }}>
-        <div style={{ flex: 1, padding: 16, overflowY: 'auto' }}>
-          {messages.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>
-              No messages yet. Start the conversation!
-            </div>
+  const renderActivity = () => {
+    // Build activity from work parts data
+    const activities = workParts.flatMap(part => {
+      const items = [];
+      items.push({ date: part.createdAt, action: 'Milestone created', detail: part.title, icon: '📋' });
+      if (part.status === 'IN_PROGRESS' || part.status === 'SUBMITTED' || part.status === 'APPROVED') {
+        items.push({ date: part.updatedAt, action: 'Work started', detail: part.title, icon: '🚀' });
+      }
+      if (part.submittedAt) {
+        items.push({ date: part.submittedAt, action: 'Submitted for review', detail: part.title, icon: '📤' });
+      }
+      if (part.reviewedAt) {
+        items.push({
+          date: part.reviewedAt,
+          action: part.status === 'APPROVED' ? 'Approved' : 'Revision requested',
+          detail: part.title,
+          icon: part.status === 'APPROVED' ? '✅' : '🔄',
+        });
+      }
+      return items;
+    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    return (
+      <div>
+        <h3 style={{ marginBottom: 20 }}>Activity Timeline</h3>
+        <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border-color)', padding: 20 }}>
+          {activities.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>No activity yet.</div>
           ) : (
-            messages.map((message) => (
-              <div key={message.id} style={{ marginBottom: 16 }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: message.senderId === user.id ? 'flex-end' : 'flex-start',
-                  gap: 12
-                }}>
-                  {message.senderId !== user.id && (
-                    <div style={{ 
-                      width: 32, 
-                      height: 32, 
-                      borderRadius: '50%', 
-                      backgroundColor: 'var(--accent)',
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontSize: '0.875rem',
-                      fontWeight: 'bold'
-                    }}>
-                      {message.sender.name?.[0] || 'U'}
-                    </div>
-                  )}
-                  <div style={{ 
-                    maxWidth: '70%',
-                    backgroundColor: message.senderId === user.id ? 'var(--accent)' : 'var(--bg-card-hover)',
-                    color: message.senderId === user.id ? 'white' : 'var(--text-primary)',
-                    padding: 12,
-                    borderRadius: 12,
-                    borderBottomLeftRadius: message.senderId === user.id ? 12 : 4,
-                    borderBottomRightRadius: message.senderId === user.id ? 4 : 12
-                  }}>
-                    <div style={{ fontSize: '0.875rem', marginBottom: 4 }}>
-                      {message.sender.name}
-                    </div>
-                    <div>{message.message}</div>
-                    <div style={{ 
-                      fontSize: '0.75rem', 
-                      opacity: 0.7, 
-                      marginTop: 4 
-                    }}>
-                      {new Date(message.createdAt).toLocaleTimeString()}
-                    </div>
-                  </div>
-                  {message.senderId === user.id && (
-                    <div style={{ 
-                      width: 32, 
-                      height: 32, 
-                      borderRadius: '50%', 
-                      backgroundColor: 'var(--accent)',
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontSize: '0.875rem',
-                      fontWeight: 'bold'
-                    }}>
-                      {user.name?.[0] || 'U'}
-                    </div>
-                  )}
+            activities.map((item, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12, marginBottom: i < activities.length - 1 ? 16 : 0, paddingBottom: i < activities.length - 1 ? 16 : 0, borderBottom: i < activities.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
+                <div style={{ fontSize: '1.2rem', flexShrink: 0 }}>{item.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{item.action}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.detail}</div>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                  {new Date(item.date).toLocaleDateString()} {new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             ))
           )}
         </div>
       </div>
-
-      {/* Message Input */}
-      <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: 8 }}>
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type your message..."
-          style={{ 
-            flex: 1,
-            padding: 12,
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid var(--border-color)',
-            borderRadius: 8,
-            color: 'var(--text-primary)'
-          }}
-        />
-        <button type="submit" className="btn btn-primary">
-          Send
-        </button>
-      </form>
-    </div>
-  );
-
-  const renderActivity = () => (
-    <div>
-      <h3 style={{ marginBottom: 24 }}>Activity Timeline</h3>
-      
-      <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border-color)', padding: 24 }}>
-        {activity.length === 0 ? (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>
-            No activity yet.
-          </div>
-        ) : (
-          <div style={{ position: 'relative' }}>
-            {/* Timeline Line */}
-            <div style={{ 
-              position: 'absolute', 
-              left: 20, 
-              top: 0, 
-              bottom: 0, 
-              width: 2, 
-              backgroundColor: 'var(--border-color)' 
-            }} />
-            
-            {activity.map((item, index) => (
-              <div key={item.id} style={{ 
-                display: 'flex', 
-                gap: 16, 
-                marginBottom: 24,
-                position: 'relative'
-              }}>
-                {/* Timeline Dot */}
-                <div style={{ 
-                  width: 12, 
-                  height: 12, 
-                  borderRadius: '50%', 
-                  backgroundColor: item.action === 'WORK_APPROVED' ? 'var(--success)' :
-                                     item.action === 'WORK_SUBMITTED' ? 'var(--warning)' :
-                                     item.action === 'REVISION_REQUESTED' ? 'var(--danger)' :
-                                     'var(--accent)',
-                  border: '2px solid var(--bg-card)',
-                  position: 'relative',
-                  zIndex: 1
-                }} />
-                
-                {/* Activity Content */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'flex-start',
-                    marginBottom: 4
-                  }}>
-                    <div>
-                      <strong>{item.actor.name}</strong>
-                      <span style={{ marginLeft: 8, color: 'var(--text-secondary)' }}>
-                        {item.action.replace(/_/g, ' ').toLowerCase()}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                      {new Date(item.createdAt).toLocaleString()}
-                    </div>
-                  </div>
-                  
-                  {item.metadata && (
-                    <div style={{ 
-                      backgroundColor: 'var(--bg-primary)', 
-                      padding: 8, 
-                      borderRadius: 6, 
-                      fontSize: '0.875rem',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      {item.metadata.title && <div>Milestone: {item.metadata.title}</div>}
-                      {item.metadata.description && <div>{item.metadata.description}</div>}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderCreateMilestone = () => (
-    <div>
-      <h3 style={{ marginBottom: 24 }}>Create New Milestone</h3>
-      
-      <form onSubmit={handleCreateWorkPart} style={{ 
-        backgroundColor: 'var(--bg-card)', 
-        borderRadius: 12, 
-        border: '1px solid var(--border-color)',
-        padding: 24
-      }}>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-            Milestone Title
-          </label>
-          <input
-            type="text"
-            value={newWorkPart.title}
-            onChange={(e) => setNewWorkPart(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="e.g., UI Design"
-            style={{ 
-              width: '100%',
-              padding: 12,
-              backgroundColor: 'var(--bg-primary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 8,
-              color: 'var(--text-primary)'
-            }}
-            required
-          />
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-            Description
-          </label>
-          <textarea
-            value={newWorkPart.description}
-            onChange={(e) => setNewWorkPart(prev => ({ ...prev, description: e.target.value }))}
-            placeholder="Describe what needs to be done for this milestone..."
-            rows={4}
-            style={{ 
-              width: '100%',
-              padding: 12,
-              backgroundColor: 'var(--bg-primary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 8,
-              color: 'var(--text-primary)',
-              resize: 'vertical'
-            }}
-            required
-          />
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-            Order
-          </label>
-          <input
-            type="number"
-            value={newWorkPart.order}
-            onChange={(e) => setNewWorkPart(prev => ({ ...prev, order: parseInt(e.target.value) }))}
-            placeholder="Order in sequence (1, 2, 3...)"
-            min={1}
-            style={{ 
-              width: '100%',
-              padding: 12,
-              backgroundColor: 'var(--bg-primary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 8,
-              color: 'var(--text-primary)'
-            }}
-            required
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button type="submit" className="btn btn-primary">
-            Create Milestone
-          </button>
-          <button type="button" className="btn btn-secondary" onClick={() => setActiveTab('milestones')}>
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-
-  if (loading) {
-    return <div>Loading work parts...</div>;
-  }
-
-  // Show error state if there's an error
-  if (error && workParts.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: 40 }}>
-        <div style={{ fontSize: '1.2rem', marginBottom: 16, color: 'var(--danger)' }}>
-          ⚠️ Error loading work parts
-        </div>
-        <div style={{ color: 'var(--text-secondary)' }}>{error}</div>
-        <button 
-          className="btn btn-primary" 
-          onClick={fetchWorkParts}
-          style={{ marginTop: 16 }}
-        >
-          Try Again
-        </button>
-      </div>
     );
-  }
-
-  // Show empty state if there are no work parts
-  if (!loading && workParts.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: 40 }}>
-        <div style={{ fontSize: '1.2rem', marginBottom: 16, color: 'var(--text-muted)' }}>
-          📋 No work parts yet
-        </div>
-        <div style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>
-          This project doesn't have any milestones defined yet.
-        </div>
-        {isClient && (
-          <button 
-            className="btn btn-primary" 
-            onClick={() => setActiveTab('create-milestone')}
-          >
-            + Create First Milestone
-          </button>
-        )}
-      </div>
-    );
-  }
+  };
 
   return (
     <div>
       {/* Tab Navigation */}
-      <div style={{ 
-        display: 'flex', 
-        borderBottom: '1px solid var(--border-color)', 
-        marginBottom: 24,
-        gap: 0
-      }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: 24 }}>
         {[
-          { id: 'overview', label: 'Overview' },
-          { id: 'milestones', label: 'Milestones' },
-          { id: 'files', label: 'Files' },
-          { id: 'chat', label: 'Chat' },
-          { id: 'activity', label: 'Activity' }
-        ].map((tab) => (
+          { id: 'overview', label: '📊 Overview' },
+          { id: 'milestones', label: '🎯 Milestones' },
+          { id: 'activity', label: '📜 Activity' },
+        ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              padding: '12px 24px',
+              padding: '10px 20px', border: 'none', cursor: 'pointer',
               backgroundColor: activeTab === tab.id ? 'var(--bg-card)' : 'transparent',
-              border: 'none',
               borderBottom: activeTab === tab.id ? '2px solid var(--accent)' : '2px solid transparent',
               color: activeTab === tab.id ? 'var(--text-primary)' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              fontWeight: activeTab === tab.id ? 600 : 400
+              fontWeight: activeTab === tab.id ? 600 : 400, transition: 'all 0.2s',
             }}
-          >
-            {tab.label}
-          </button>
+          >{tab.label}</button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div>
-        {activeTab === 'overview' && renderOverview()}
-        {activeTab === 'milestones' && renderMilestones()}
-        {activeTab === 'files' && renderFiles()}
-        {activeTab === 'chat' && renderChat()}
-        {activeTab === 'activity' && renderActivity()}
-        {activeTab === 'create-milestone' && renderCreateMilestone()}
-      </div>
+      {activeTab === 'overview' && renderOverview()}
+      {activeTab === 'milestones' && renderMilestones()}
+      {activeTab === 'activity' && renderActivity()}
 
-      {/* Error and Success Messages */}
+      {/* Toast Messages */}
       {error && (
-        <div style={{ 
-          position: 'fixed', 
-          top: 20, 
-          right: 20, 
-          backgroundColor: 'var(--danger)', 
-          color: 'white', 
-          padding: 16, 
-          borderRadius: 8,
-          zIndex: 1000
+        <div style={{
+          position: 'fixed', bottom: 20, right: 20, backgroundColor: 'var(--danger)', color: 'white',
+          padding: '12px 20px', borderRadius: 10, zIndex: 1000, boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+          display: 'flex', alignItems: 'center', gap: 8
         }}>
-          {error}
+          ❌ {error}
+          <button onClick={() => setError('')} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1rem' }}>×</button>
         </div>
       )}
-      
       {success && (
-        <div style={{ 
-          position: 'fixed', 
-          top: 20, 
-          right: 20, 
-          backgroundColor: 'var(--success)', 
-          color: 'white', 
-          padding: 16, 
-          borderRadius: 8,
-          zIndex: 1000
+        <div style={{
+          position: 'fixed', bottom: 20, right: 20, backgroundColor: 'var(--success)', color: 'white',
+          padding: '12px 20px', borderRadius: 10, zIndex: 1000, boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
         }}>
-          {success}
+          ✅ {success}
         </div>
       )}
     </div>
