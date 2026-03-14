@@ -167,7 +167,21 @@ export class TasksService {
             },
             orderBy: { createdAt: 'desc' },
         });
-        return tasks.map(t => this.transformTask(t));
+
+        // Fetch assigned freelancer names
+        const assignedIds = tasks.map(t => t.assignedToId).filter(Boolean) as string[];
+        const freelancers = assignedIds.length > 0
+            ? await this.prisma.user.findMany({
+                where: { id: { in: assignedIds } },
+                select: { id: true, name: true },
+            })
+            : [];
+        const freelancerMap = new Map(freelancers.map(f => [f.id, f]));
+
+        return tasks.map(t => ({
+            ...this.transformTask(t),
+            assignedTo: t.assignedToId ? freelancerMap.get(t.assignedToId) || null : null,
+        }));
     }
 
     async update(id: string, clientId: string, dto: UpdateTaskDto) {

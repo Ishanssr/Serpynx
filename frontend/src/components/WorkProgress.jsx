@@ -277,13 +277,13 @@ export default function WorkProgress({ taskId, user }) {
                       <div style={{ fontSize: '2rem', marginBottom: 8 }}>📁</div>
                       <div style={{ 
                         fontSize: '0.875rem', 
-                        color: '#374151',
+                        color: 'var(--text-primary)',
                         marginBottom: 4,
                         fontWeight: 500
                       }}>
                         Drop files here or click to upload
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         Maximum file size: 10MB
                       </div>
                     </label>
@@ -307,7 +307,7 @@ export default function WorkProgress({ taskId, user }) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                           <div style={{ 
                             fontSize: '1.2rem',
-                            color: '#6b7280'
+                            color: 'var(--text-muted)'
                           }}>
                             {file.filename.endsWith('.pdf') ? '📄' : 
                              file.filename.endsWith('.zip') ? '📦' :
@@ -318,8 +318,8 @@ export default function WorkProgress({ taskId, user }) {
                              '📎'}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 500, color: '#1a1a1a' }}>{file.filename}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                            <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{file.filename}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                               {(file.size / 1024).toFixed(1)} KB
                             </div>
                           </div>
