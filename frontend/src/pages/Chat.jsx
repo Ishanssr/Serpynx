@@ -1,11 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getConversations, getChatRequests, acceptChatRequest, rejectChatRequest, getMessages, sendMessageRest } from '../api/client';
+import { getConversations, getChatRequests, acceptChatRequest, rejectChatRequest, getMessages, sendMessageRest, uploadChatFile, API_BASE } from '../api/client';
 import { Loading } from '../components/UI';
-import { io } from 'socket.io-client';
-
-const API_URL = import.meta.env.VITE_API_URL || '';
 
 export default function Chat() {
     const { conversationId } = useParams();
@@ -16,30 +13,13 @@ export default function Chat() {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const [activeConvo, setActiveConvo] = useState(conversationId || null);
-    const [typing, setTyping] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const messagesEndRef = useRef(null);
-    const socketRef = useRef(null);
-    const typingTimeoutRef = useRef(null);
+    const fileInputRef = useRef(null);
 
-    useEffect(() => {
-        fetchData();
-        // WebSocket disabled — no gateway on backend yet. Chat works via REST API.
-        return () => {};
-    }, []);
-
-    useEffect(() => {
-        if (activeConvo) {
-            loadMessages(activeConvo);
-            socketRef.current?.emit('join_conversation', { conversationId: activeConvo });
-            return () => {
-                socketRef.current?.emit('leave_conversation', { conversationId: activeConvo });
-            };
-        }
-    }, [activeConvo]);
-
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { if (activeConvo) loadMessages(activeConvo); }, [activeConvo]);
+    useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
     const fetchData = async () => {
         try {
@@ -49,8 +29,6 @@ export default function Chat() {
             ]);
             const convos = Array.isArray(convosRes.data) ? convosRes.data : [];
             setConversations(convos);
-
-            // Chat requests come as a flat array — split into received/sent
             const allRequests = Array.isArray(reqsRes.data) ? reqsRes.data : [];
             setRequests({
                 received: allRequests.filter(r => r.receiverId === user?.id && r.status === 'PENDING'),
@@ -81,45 +59,98 @@ export default function Chat() {
         if (!newMessage.trim() || !activeConvo) return;
         const content = newMessage.trim();
         setNewMessage('');
-
-        // Try WebSocket first, fall back to REST
-        if (socketRef.current?.connected) {
-            socketRef.current.emit('send_message', { conversationId: activeConvo, content });
-        } else {
-            try {
-                const res = await sendMessageRest(activeConvo, { content });
-                setMessages(prev => [...prev, res.data]);
-            } catch (err) {
-                console.error(err);
-            }
+        try {
+            const res = await sendMessageRest(activeConvo, { content });
+            setMessages(prev => [...prev, res.data]);
+        } catch (err) {
+            console.error(err);
         }
     };
 
-    const handleTyping = () => {
-        socketRef.current?.emit('typing', { conversationId: activeConvo });
-        clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => {
-            socketRef.current?.emit('stop_typing', { conversationId: activeConvo });
-        }, 1000);
+    const handleFileUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !activeConvo) return;
+        fileInputRef.current.value = '';
+        setUploading(true);
+        try {
+            const res = await uploadChatFile(activeConvo, file);
+            setMessages(prev => [...prev, res.data]);
+        } catch (err) {
+            console.error('File upload failed:', err);
+            alert(err.response?.data?.message || 'Failed to upload file. Allowed: images, PDF, TXT, ZIP (max 25MB)');
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleAccept = async (id) => {
-        try {
-            await acceptChatRequest(id);
-            fetchData();
-        } catch (err) { console.error(err); }
+        try { await acceptChatRequest(id); fetchData(); } catch (err) { console.error(err); }
+    };
+    const handleReject = async (id) => {
+        try { await rejectChatRequest(id); fetchData(); } catch (err) { console.error(err); }
     };
 
-    const handleReject = async (id) => {
-        try {
-            await rejectChatRequest(id);
-            fetchData();
-        } catch (err) { console.error(err); }
+    const isImage = (type) => type && type.startsWith('image/');
+    const getFileIcon = (name) => {
+        if (!name) return '📎';
+        const ext = name.split('.').pop()?.toLowerCase();
+        return { pdf: '📄', zip: '📦', txt: '📝', png: '🖼️', jpg: '🖼️', jpeg: '🖼️', webp: '🖼️', gif: '🖼️' }[ext] || '📎';
+    };
+
+    const formatSize = (bytes) => {
+        if (!bytes) return '';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     };
 
     if (loading) return <Loading />;
-
     const activeConversation = conversations.find(c => c.id === activeConvo);
+
+    const renderAttachment = (msg) => {
+        if (!msg.fileUrl) return null;
+        const fullUrl = `${API_BASE}${msg.fileUrl}`;
+        const isSent = msg.senderId === user?.id;
+
+        if (isImage(msg.fileType)) {
+            return (
+                <div style={{ marginTop: msg.content ? 6 : 0, borderRadius: 8, overflow: 'hidden', maxWidth: 280 }}>
+                    <a href={fullUrl} target="_blank" rel="noopener noreferrer">
+                        <img
+                            src={fullUrl}
+                            alt={msg.fileName}
+                            style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 8, display: 'block', cursor: 'pointer' }}
+                            onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                        />
+                        <div style={{ display: 'none', alignItems: 'center', gap: 8, padding: 8, fontSize: '0.8rem' }}>
+                            {getFileIcon(msg.fileName)} {msg.fileName}
+                        </div>
+                    </a>
+                </div>
+            );
+        }
+
+        return (
+            <a href={fullUrl} target="_blank" rel="noopener noreferrer" download={msg.fileName}
+                style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginTop: msg.content ? 6 : 0,
+                    borderRadius: 8, textDecoration: 'none',
+                    backgroundColor: isSent ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)',
+                    color: 'inherit', transition: 'opacity 0.2s',
+                }}>
+                <span style={{ fontSize: '1.5rem' }}>{getFileIcon(msg.fileName)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 500, fontSize: '0.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {msg.fileName}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>
+                        {formatSize(msg.fileSize)} • Click to download
+                    </div>
+                </div>
+                <span style={{ fontSize: '1.1rem' }}>⬇️</span>
+            </a>
+        );
+    };
 
     return (
         <div className="chat-layout">
@@ -127,7 +158,6 @@ export default function Chat() {
             <div className="chat-sidebar">
                 <h3 style={{ padding: '16px', borderBottom: '1px solid var(--border-color)' }}>Messages</h3>
 
-                {/* Pending requests */}
                 {requests.received.length > 0 && (
                     <div className="chat-requests-section">
                         <div style={{ padding: '8px 16px', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -145,7 +175,6 @@ export default function Chat() {
                     </div>
                 )}
 
-                {/* Conversations */}
                 <div className="chat-convo-list">
                     {conversations.length === 0 ? (
                         <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -153,17 +182,13 @@ export default function Chat() {
                         </div>
                     ) : (
                         conversations.map(c => (
-                            <div
-                                key={c.id}
-                                className={`chat-convo-item ${c.id === activeConvo ? 'active' : ''}`}
-                                onClick={() => setActiveConvo(c.id)}
-                            >
+                            <div key={c.id} className={`chat-convo-item ${c.id === activeConvo ? 'active' : ''}`} onClick={() => setActiveConvo(c.id)}>
                                 <div className="chat-convo-avatar">{c.otherUser.name?.[0]?.toUpperCase()}</div>
                                 <div className="chat-convo-info">
                                     <div className="chat-convo-name">{c.otherUser.name}</div>
                                     {c.lastMessage && (
                                         <div className="chat-convo-preview">
-                                            {c.lastMessage.content.length > 30 ? c.lastMessage.content.slice(0, 30) + '...' : c.lastMessage.content}
+                                            {c.lastMessage.fileUrl ? '📎 File' : (c.lastMessage.content?.length > 30 ? c.lastMessage.content.slice(0, 30) + '...' : c.lastMessage.content)}
                                         </div>
                                     )}
                                 </div>
@@ -188,24 +213,36 @@ export default function Chat() {
                             {messages.map(msg => (
                                 <div key={msg.id} className={`chat-msg ${msg.senderId === user?.id ? 'sent' : 'received'}`}>
                                     <div className="chat-bubble">
-                                        {msg.content}
+                                        {msg.content && <div>{msg.content}</div>}
+                                        {renderAttachment(msg)}
                                     </div>
                                     <div className="chat-msg-time">
                                         {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </div>
                                 </div>
                             ))}
-                            {typing && <div className="chat-typing">typing...</div>}
                             <div ref={messagesEndRef} />
                         </div>
 
+                        {/* Input bar with file attach */}
                         <form onSubmit={handleSend} className="chat-input-bar">
+                            <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileUpload}
+                                accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,application/zip" />
+                            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                                style={{
+                                    background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer',
+                                    padding: '4px 8px', color: 'var(--text-secondary)', opacity: uploading ? 0.5 : 1,
+                                }}
+                                title="Attach file">
+                                {uploading ? '⏳' : '📎'}
+                            </button>
                             <input
                                 className="form-input"
                                 value={newMessage}
-                                onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }}
+                                onChange={(e) => setNewMessage(e.target.value)}
                                 placeholder="Type a message..."
                                 autoFocus
+                                style={{ flex: 1 }}
                             />
                             <button className="btn btn-primary" type="submit" disabled={!newMessage.trim()}>
                                 Send

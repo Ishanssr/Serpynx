@@ -1,8 +1,11 @@
 import {
     Controller, Get, Post, Param, Body, Query, UseGuards, Request,
-    NotFoundException, ForbiddenException,
+    NotFoundException, ForbiddenException, UseInterceptors, UploadedFile, BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -194,11 +197,11 @@ export class ChatController {
         };
     }
 
-    // Send a message  
+    // Send a text message  
     @Post('conversations/:conversationId/messages')
     async sendMessage(
         @Param('conversationId') conversationId: string,
-        @Body() body: { content: string },
+        @Body() body: { content: string; fileUrl?: string; fileType?: string; fileName?: string; fileSize?: number },
         @Request() req,
     ) {
         const conversation = await this.prisma.conversation.findUnique({
@@ -211,9 +214,13 @@ export class ChatController {
 
         const message = await this.prisma.message.create({
             data: {
-                content: body.content,
+                content: body.content || '',
                 senderId: req.user.id,
                 conversationId,
+                fileUrl: body.fileUrl || null,
+                fileType: body.fileType || null,
+                fileName: body.fileName || null,
+                fileSize: body.fileSize || null,
             },
             include: {
                 User: { select: { id: true, name: true } },
@@ -230,10 +237,79 @@ export class ChatController {
         const receiverId = conversation.user1Id === req.user.id
             ? conversation.user2Id : conversation.user1Id;
         const senderName = message.User?.name || 'Someone';
+        const preview = body.fileName ? `📎 ${body.fileName}` : (body.content?.length > 50 ? body.content.slice(0, 50) + '...' : body.content);
         this.notificationsService.create({
             userId: receiverId,
             type: 'NEW_MESSAGE',
-            message: `${senderName}: ${body.content.length > 50 ? body.content.slice(0, 50) + '...' : body.content}`,
+            message: `${senderName}: ${preview}`,
+            link: `/chat`,
+        }).catch(err => console.error('Failed to send message notification:', err));
+
+        return { ...message, sender: message.User, User: undefined };
+    }
+
+    // Upload a file and send as message
+    @Post('conversations/:conversationId/upload')
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: diskStorage({
+                destination: './uploads/chat-files',
+                filename: (req, file, cb) => {
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                    cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+                },
+            }),
+            fileFilter: (req, file, cb) => {
+                const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf', 'text/plain', 'application/zip', 'application/x-zip-compressed'];
+                cb(null, allowed.includes(file.mimetype));
+            },
+            limits: { fileSize: 25 * 1024 * 1024 },
+        }),
+    )
+    async uploadChatFile(
+        @Param('conversationId') conversationId: string,
+        @UploadedFile() file: Express.Multer.File,
+        @Body() body: { content?: string },
+        @Request() req,
+    ) {
+        if (!file) throw new BadRequestException('No file uploaded');
+
+        const conversation = await this.prisma.conversation.findUnique({
+            where: { id: conversationId },
+        });
+        if (!conversation) throw new NotFoundException('Conversation not found');
+        if (conversation.user1Id !== req.user.id && conversation.user2Id !== req.user.id) {
+            throw new ForbiddenException('Not your conversation');
+        }
+
+        const fileUrl = `/uploads/chat-files/${file.filename}`;
+        const message = await this.prisma.message.create({
+            data: {
+                content: body.content || '',
+                senderId: req.user.id,
+                conversationId,
+                fileUrl,
+                fileType: file.mimetype,
+                fileName: file.originalname,
+                fileSize: file.size,
+            },
+            include: {
+                User: { select: { id: true, name: true } },
+            },
+        });
+
+        await this.prisma.conversation.update({
+            where: { id: conversationId },
+            data: { updatedAt: new Date() },
+        });
+
+        const receiverId = conversation.user1Id === req.user.id
+            ? conversation.user2Id : conversation.user1Id;
+        const senderName = message.User?.name || 'Someone';
+        this.notificationsService.create({
+            userId: receiverId,
+            type: 'NEW_MESSAGE',
+            message: `${senderName}: 📎 ${file.originalname}`,
             link: `/chat`,
         }).catch(err => console.error('Failed to send message notification:', err));
 

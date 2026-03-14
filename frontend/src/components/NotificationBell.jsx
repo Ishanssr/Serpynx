@@ -8,17 +8,48 @@ export default function NotificationBell() {
     const [unread, setUnread] = useState(0);
     const [loading, setLoading] = useState(false);
     const ref = useRef(null);
+    const prevUnread = useRef(0);
+    const hasLoaded = useRef(false);
     const navigate = useNavigate();
 
-    // Fetch unread count on mount and every 30s
+    // Play notification chime using Web Audio API
+    const playNotificationSound = () => {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const playTone = (freq, start, dur) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.15, ctx.currentTime + start);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime + start);
+                osc.stop(ctx.currentTime + start + dur);
+            };
+            playTone(880, 0, 0.15);
+            playTone(1320, 0.12, 0.2);
+        } catch (e) {}
+    };
+
+    // Fetch unread count on mount and every 15s
     useEffect(() => {
         const fetchCount = () => {
             getUnreadCount()
-                .then((res) => setUnread(res.data.count))
+                .then((res) => {
+                    const newCount = res.data.count;
+                    if (hasLoaded.current && newCount > prevUnread.current) {
+                        playNotificationSound();
+                    }
+                    prevUnread.current = newCount;
+                    hasLoaded.current = true;
+                    setUnread(newCount);
+                })
                 .catch(() => { });
         };
         fetchCount();
-        const interval = setInterval(fetchCount, 30000);
+        const interval = setInterval(fetchCount, 15000);
         return () => clearInterval(interval);
     }, []);
 

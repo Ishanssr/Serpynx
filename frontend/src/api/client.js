@@ -95,6 +95,14 @@ export const rejectChatRequest = (id) => api.post(`/api/chat/request/${id}/rejec
 export const getConversations = () => api.get('/api/chat/conversations');
 export const getMessages = (conversationId, page) => api.get(`/api/chat/conversations/${conversationId}/messages`, { params: { page } });
 export const sendMessageRest = (conversationId, data) => api.post(`/api/chat/conversations/${conversationId}/messages`, data);
+export const uploadChatFile = (conversationId, file, content = '') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (content) formData.append('content', content);
+    return api.post(`/api/chat/conversations/${conversationId}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+};
 export const getConnectionStatus = (userId) => api.get(`/api/chat/status/${userId}`);
 
 export default api;
