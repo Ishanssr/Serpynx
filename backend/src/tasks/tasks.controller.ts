@@ -1,6 +1,6 @@
 import {
     Controller, Get, Post, Patch, Delete,
-    Body, Param, Query, UseGuards, Request, UnauthorizedException,
+    Body, Param, Query, UseGuards, Request, UnauthorizedException, NotFoundException, ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TasksService } from './tasks.service';
@@ -125,9 +125,21 @@ export class TasksController {
     }
 
     @Post(':id/assign')
-    @UseGuards(AuthGuard('jwt'))
-    async handleTaskAssignment(@Param('id') taskId: string) {
-        await this.tasksService.handleTaskAssignment(taskId);
-        return { message: 'Work parts created for assigned task' };
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles(Role.CLIENT)
+    async handleTaskAssignment(
+        @Param('id') taskId: string,
+        @Body() body: { primaryBidId: string; standbyBidId?: string },
+        @Request() req,
+    ) {
+        const task = await this.tasksService.findOne(taskId);
+        if (!task) throw new NotFoundException('Task not found');
+        if (task.clientId !== req.user.id) throw new ForbiddenException('Not your task');
+        if (task.status !== 'OPEN') throw new ForbiddenException('Task is not open for assignment');
+
+        const result = await this.tasksService.assignFreelancers(
+            taskId, body.primaryBidId, body.standbyBidId,
+        );
+        return result;
     }
 }

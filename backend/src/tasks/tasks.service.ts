@@ -3,13 +3,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto, UpdateTaskDto, TaskQueryDto } from './tasks.dto';
 import { WorkBreakdownService } from '../work-breakdown/work-breakdown.service';
 import { WorkPartCreatorService } from './work-part-creator.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class TasksService {
     constructor(
         private prisma: PrismaService,
         private workBreakdownService: WorkBreakdownService,
-        private workPartCreatorService: WorkPartCreatorService
+        private workPartCreatorService: WorkPartCreatorService,
+        private notificationsService: NotificationsService,
     ) { }
 
     /**
@@ -228,17 +230,71 @@ export class TasksService {
         return workParts;
     }
 
-    async handleTaskAssignment(taskId: string): Promise<void> {
-        // Check if task is being assigned to ASSIGNED status
-        const task = await this.prisma.task.findUnique({
-            where: { id: taskId }
+    async assignFreelancers(taskId: string, primaryBidId: string, standbyBidId?: string) {
+        // Get the primary bid to find the freelancer
+        const primaryBid = await this.prisma.bid.findUnique({
+            where: { id: primaryBidId },
+            include: { User: { select: { id: true, name: true } }, Task: { select: { title: true } } },
+        });
+        if (!primaryBid) throw new NotFoundException('Primary bid not found');
+
+        // Update task: set status, assignedTo, primaryBidId, standbyBidId
+        await this.prisma.task.update({
+            where: { id: taskId },
+            data: {
+                status: 'ASSIGNED',
+                assignedToId: primaryBid.freelancerId,
+                primaryBidId,
+                standbyBidId: standbyBidId || null,
+            },
         });
 
-        if (!task) {
-            throw new NotFoundException('Task not found');
+        // Update bid statuses
+        // Primary bid → ACCEPTED
+        await this.prisma.bid.update({ where: { id: primaryBidId }, data: { status: 'ACCEPTED' } });
+
+        // Standby bid → STANDBY (if provided)
+        if (standbyBidId) {
+            await this.prisma.bid.update({ where: { id: standbyBidId }, data: { status: 'STANDBY' } });
         }
 
-        // Only create work parts if task is being assigned to ASSIGNED status
+        // Reject all other bids
+        await this.prisma.bid.updateMany({
+            where: {
+                taskId,
+                id: { notIn: [primaryBidId, ...(standbyBidId ? [standbyBidId] : [])] },
+                status: 'PENDING',
+            },
+            data: { status: 'REJECTED' },
+        });
+
+        // Create work parts
+        await this.workPartCreatorService.createDefaultWorkParts(taskId);
+
+        // Send notifications
+        const taskTitle = primaryBid.Task?.title || 'a task';
+        if (this.notificationsService) {
+            this.notificationsService.notifyTaskAssigned(primaryBid.freelancerId, taskId, taskTitle)
+                .catch(err => console.error('Notification error:', err));
+
+            if (standbyBidId) {
+                const standbyBid = await this.prisma.bid.findUnique({
+                    where: { id: standbyBidId },
+                    select: { freelancerId: true },
+                });
+                if (standbyBid) {
+                    this.notificationsService.notifyStandbyAssigned(standbyBid.freelancerId, taskId, taskTitle)
+                        .catch(err => console.error('Notification error:', err));
+                }
+            }
+        }
+
+        return { message: 'Freelancers assigned successfully', status: 'ASSIGNED' };
+    }
+
+    async handleTaskAssignment(taskId: string): Promise<void> {
+        const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+        if (!task) throw new NotFoundException('Task not found');
         if (task.status === 'ASSIGNED') {
             await this.workPartCreatorService.createDefaultWorkParts(taskId);
         }
