@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getWorkParts, updateWorkPart, reviewWorkPart, uploadWorkFile, deleteWorkFile } from '../api/client';
+import { getWorkParts, updateWorkPart, reviewWorkPart, uploadWorkFile, deleteWorkFile, API_BASE } from '../api/client';
 import { StatusBadge } from './UI';
 
 const WorkPartStatus = {
@@ -57,7 +57,7 @@ export default function ProjectWorkspace({ taskId, user }) {
         files: (p.WorkFile || []).map(f => ({
           ...f,
           uploader: f.User,
-          url: `/uploads/work-files/${f.filename}`,
+          url: `${API_BASE}/uploads/work-files/${f.filename}`,
         })),
       })));
       setError('');
@@ -114,9 +114,10 @@ export default function ProjectWorkspace({ taskId, user }) {
       setError('');
       setUploadingFiles(prev => ({ ...prev, [workPartId]: true }));
       const res = await uploadWorkFile(workPartId, file);
+      const uploaded = res.data;
       const newFile = {
-        ...res.data,
-        url: `/uploads/work-files/${res.data.filename}`,
+        ...uploaded,
+        url: `${API_BASE}/uploads/work-files/${uploaded.filename}`,
         uploader: { name: user.name || 'You' },
       };
       setWorkParts(prev => prev.map(p =>
