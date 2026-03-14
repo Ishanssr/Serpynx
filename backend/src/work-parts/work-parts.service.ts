@@ -21,6 +21,12 @@ export class WorkPartsService {
 
     return this.prisma.workPart.findMany({
       where: { taskId },
+      include: {
+        WorkFile: {
+          include: { User: { select: { id: true, name: true } } },
+          orderBy: { uploadedAt: 'desc' },
+        },
+      },
       orderBy: { partNumber: 'asc' }
     });
   }
