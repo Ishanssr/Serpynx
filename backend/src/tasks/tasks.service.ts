@@ -164,11 +164,14 @@ export class TasksService {
             where: { clientId, deletedAt: null },
             include: {
                 _count: { select: { Bid: true } },
+                Bid: {
+                    select: { id: true, freelancerId: true, status: true, User: { select: { id: true, name: true } } },
+                },
             },
             orderBy: { createdAt: 'desc' },
         });
 
-        // Fetch assigned freelancer names
+        // Fetch assigned freelancer names by assignedToId
         const assignedIds = tasks.map(t => t.assignedToId).filter(Boolean) as string[];
         const freelancers = assignedIds.length > 0
             ? await this.prisma.user.findMany({
@@ -178,10 +181,23 @@ export class TasksService {
             : [];
         const freelancerMap = new Map(freelancers.map(f => [f.id, f]));
 
-        return tasks.map(t => ({
-            ...this.transformTask(t),
-            assignedTo: t.assignedToId ? freelancerMap.get(t.assignedToId) || null : null,
-        }));
+        return tasks.map(t => {
+            // Primary: look up by assignedToId
+            let assignedTo = t.assignedToId ? freelancerMap.get(t.assignedToId) || null : null;
+
+            // Fallback: if task is ASSIGNED but no assignedToId, find from primaryBidId or accepted bid
+            if (!assignedTo && (t.status === 'ASSIGNED' || t.status === 'IN_REVIEW' || t.status === 'COMPLETED')) {
+                const primaryBid = t.primaryBidId
+                    ? t.Bid.find(b => b.id === t.primaryBidId)
+                    : t.Bid.find(b => b.status === 'ACCEPTED');
+                if (primaryBid?.User) {
+                    assignedTo = primaryBid.User;
+                }
+            }
+
+            const { Bid, ...rest } = this.transformTask(t);
+            return { ...rest, assignedTo, bidCount: t._count?.Bid || 0 };
+        });
     }
 
     async update(id: string, clientId: string, dto: UpdateTaskDto) {

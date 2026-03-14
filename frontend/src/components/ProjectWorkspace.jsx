@@ -420,20 +420,21 @@ export default function ProjectWorkspace({ taskId, user }) {
           ) : (
             discussionNotes.map(note => {
               const isMine = note.senderId === user.id;
+              const bubbleBg = isMine ? '#2563eb' : '#2a2a2e';
+              const bubbleText = '#ffffff';
               return (
                 <div key={note.id} style={{ marginBottom: 12, display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                   <div style={{
                     maxWidth: '70%', padding: 10, borderRadius: 12,
-                    backgroundColor: isMine ? 'var(--accent)' : 'var(--bg-secondary)',
-                    color: isMine ? 'white' : 'var(--text-primary)',
+                    backgroundColor: bubbleBg,
                     borderBottomLeftRadius: isMine ? 12 : 4,
                     borderBottomRightRadius: isMine ? 4 : 12,
                   }}>
-                    <div style={{ fontSize: '0.7rem', opacity: 0.8, marginBottom: 3, fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.7rem', color: '#d1d5db', marginBottom: 3, fontWeight: 600 }}>
                       {note.sender} • {note.role === 'CLIENT' ? '👤 Client' : '💻 Freelancer'}
                     </div>
-                    <div style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>{note.text}</div>
-                    <div style={{ fontSize: '0.65rem', opacity: 0.6, marginTop: 3 }}>
+                    <div style={{ fontSize: '0.85rem', lineHeight: 1.4, color: bubbleText }}>{note.text}</div>
+                    <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: 3 }}>
                       {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
