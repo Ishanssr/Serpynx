@@ -107,14 +107,28 @@ export class BidsService {
           select: {
             id: true,
             title: true,
+            description: true,
             budget: true,
-            status: true
+            status: true,
+            requiredSkills: true,
+            createdAt: true,
+            User: {
+              select: { id: true, name: true }
+            }
           }
         }
       },
       orderBy: { createdAt: 'desc' }
     });
 
-    return { data: bids.map(b => this.transformBid(b)) };
+    return { data: bids.map(b => {
+      const transformed = this.transformBid(b);
+      // Also transform the nested task's User → client
+      if (transformed.task?.User) {
+        transformed.task.client = transformed.task.User;
+        delete transformed.task.User;
+      }
+      return transformed;
+    }) };
   }
 }

@@ -30,6 +30,42 @@ export class TasksController {
         return this.tasksService.findByClient(req.user.id);
     }
 
+    @Get('assigned')
+    @UseGuards(AuthGuard('jwt'))
+    async getAssignedTasks(@Request() req) {
+        const tasks = await this.prisma.task.findMany({
+            where: {
+                assignedToId: req.user.id,
+                deletedAt: null,
+            },
+            include: {
+                User: { select: { id: true, name: true } },
+                Bid: {
+                    where: { freelancerId: req.user.id, status: 'ACCEPTED' },
+                    select: { amount: true, estimatedDays: true },
+                    take: 1,
+                },
+            },
+            orderBy: { updatedAt: 'desc' },
+        });
+
+        return tasks.map(t => {
+            const bid = t.Bid?.[0];
+            return {
+                id: t.id,
+                title: t.title,
+                description: t.description,
+                budget: t.budget,
+                status: t.status,
+                requiredSkills: t.requiredSkills,
+                createdAt: t.createdAt,
+                client: t.User || null,
+                bidAmount: bid?.amount || t.budget,
+                bidEstimatedDays: bid?.estimatedDays || null,
+            };
+        });
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.tasksService.findOne(id);

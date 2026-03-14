@@ -37,6 +37,7 @@ export const acceptBid = (bidId) => api.post(`/api/bids/${bidId}/accept`);
 export const assignPrimaryAndStandby = (taskId, data) => api.post(`/api/tasks/${taskId}/assign`, data);
 export const triggerStandbyTakeover = (taskId) => api.post(`/api/tasks/${taskId}/standby-takeover`);
 export const getMyBids = () => api.get('/api/bids/my');
+export const getAssignedTasks = () => api.get('/api/tasks/assigned');
 
 // Submissions
 export const submitWork = (taskId, data) => api.post(`/api/tasks/${taskId}/submit`, data);

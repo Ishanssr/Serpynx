@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getMyBids } from '../api/client';
+import { getAssignedTasks } from '../api/client';
 import { StatusBadge, Loading } from './UI';
 import ProjectWorkspace from './ProjectWorkspace';
 
@@ -15,68 +15,14 @@ export default function FreelancerDashboard() {
 
   const fetchAssignedTasks = async () => {
     try {
-      console.log('Fetching assigned tasks...');
-      const res = await getMyBids();
-      console.log('Full response:', res);
-      console.log('Response data:', res.data);
-      console.log('Response type:', typeof res.data);
-      console.log('Is data array?', Array.isArray(res.data));
-      
-      // Ensure we have an array - handle different response structures
-      let bidsData = [];
-      if (Array.isArray(res.data)) {
-        bidsData = res.data;
-      } else if (res.data && Array.isArray(res.data.data)) {
-        // Handle nested data structure
-        bidsData = res.data.data;
-      } else if (res.data && res.data.bids && Array.isArray(res.data.bids)) {
-        // Handle bids wrapper
-        bidsData = res.data.bids;
-      } else {
-        console.warn('Unexpected response structure:', res.data);
-        bidsData = [];
-      }
-      
-      console.log('Processed bids data:', bidsData);
-      
-      const tasks = bidsData
-        .filter(bid => {
-          console.log('Checking bid:', bid.id, 'status:', bid.status, 'task status:', bid.task?.status);
-          console.log('Task object:', bid.task);
-          
-          // Check if bid is accepted AND task exists
-          if (bid.status !== 'ACCEPTED') {
-            console.log('Bid not accepted, skipping');
-            return false;
-          }
-          
-          if (!bid.task) {
-            console.log('No task object, skipping');
-            return false;
-          }
-          
-          // Check task status - be more flexible
-          const validTaskStatuses = ['ASSIGNED', 'IN_REVIEW', 'COMPLETED', 'OPEN'];
-          const isValidStatus = validTaskStatuses.includes(bid.task.status);
-          console.log('Task status valid:', isValidStatus, 'for status:', bid.task.status);
-          
-          return isValidStatus;
-        })
-        .map(bid => ({
-          ...bid.task,
-          bidAmount: bid.amount,
-          bidEstimatedDays: bid.estimatedDays
-        }));
-      
-      console.log('Filtered tasks:', tasks);
+      const res = await getAssignedTasks();
+      const tasks = Array.isArray(res.data) ? res.data : [];
       setAssignedTasks(tasks);
-      
       if (tasks.length === 0) {
-        setError('No assigned tasks found. Check console for details. Make sure you have accepted bids and tasks have been assigned.');
+        setError('No assigned tasks found. Tasks will appear here once a client assigns you to a project.');
       }
     } catch (err) {
       console.error('Error fetching assigned tasks:', err);
-      console.error('Error details:', err.response?.data);
       setError(err.response?.data?.message || 'Failed to fetch assigned tasks');
     } finally {
       setLoading(false);
