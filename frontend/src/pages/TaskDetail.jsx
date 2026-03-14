@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getTask, createBid, assignPrimaryAndStandby, triggerStandbyTakeover, submitWork, createReview, getMyTeams } from '../api/client';
 import { ScoreBar, StarRating, StatusBadge, SkillTags, Loading } from '../components/UI';
