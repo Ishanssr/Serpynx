@@ -347,4 +347,30 @@ export class ChatController {
 
         return { status: 'NONE' };
     }
+
+    // Get unread message count (for badge on Messages nav)
+    @Get('unread-count')
+    async getUnreadMessageCount(@Request() req) {
+        // Find all conversations the user is part of
+        const conversations = await this.prisma.conversation.findMany({
+            where: {
+                OR: [
+                    { user1Id: req.user.id },
+                    { user2Id: req.user.id },
+                ],
+            },
+            select: { id: true },
+        });
+        const convoIds = conversations.map(c => c.id);
+        if (convoIds.length === 0) return { count: 0 };
+
+        const count = await this.prisma.message.count({
+            where: {
+                conversationId: { in: convoIds },
+                senderId: { not: req.user.id },
+                read: false,
+            },
+        });
+        return { count };
+    }
 }

@@ -104,5 +104,6 @@ export const uploadChatFile = (conversationId, file, content = '') => {
     });
 };
 export const getConnectionStatus = (userId) => api.get(`/api/chat/status/${userId}`);
+export const getUnreadMessageCount = () => api.get('/api/chat/unread-count');
 
 export default api;

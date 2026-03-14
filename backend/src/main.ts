@@ -3,8 +3,15 @@ import { ValidationPipe, Logger, Controller, Get } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { join } from 'path';
+import * as fs from 'fs';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
+
+// Ensure upload directories exist
+['uploads', 'uploads/chat-files', 'uploads/work-files'].forEach(dir => {
+  const p = join(process.cwd(), dir);
+  if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+});
 
 @Controller()
 class AppController {

@@ -1,12 +1,24 @@
+import { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { getUnreadMessageCount } from '../api/client';
 import NotificationBell from './NotificationBell';
 
 export default function Layout({ children }) {
     const { user, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+    const [unreadMsgs, setUnreadMsgs] = useState(0);
+
+    useEffect(() => {
+        const fetch = () => {
+            getUnreadMessageCount().then(res => setUnreadMsgs(res.data.count)).catch(() => {});
+        };
+        fetch();
+        const interval = setInterval(fetch, 15000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -43,8 +55,16 @@ export default function Layout({ children }) {
                         </NavLink>
                     </li>
                     <li>
-                        <NavLink to="/chat" className={({ isActive }) => isActive ? 'active' : ''}>
+                        <NavLink to="/chat" className={({ isActive }) => isActive ? 'active' : ''} style={{ position: 'relative' }}>
                             <span className="nav-icon">✉</span> Messages
+                            {unreadMsgs > 0 && (
+                                <span style={{
+                                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                                    backgroundColor: '#ef4444', color: 'white', borderRadius: 20,
+                                    minWidth: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '0.65rem', fontWeight: 700, padding: '0 5px',
+                                }}>{unreadMsgs > 99 ? '99+' : unreadMsgs}</span>
+                            )}
                         </NavLink>
                     </li>
                     {isClient && (
