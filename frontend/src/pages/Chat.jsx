@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getConversations, getChatRequests, acceptChatRequest, rejectChatRequest, getMessages, sendMessageRest, uploadChatFile, API_BASE } from '../api/client';
+import { getConversations, getChatRequests, acceptChatRequest, rejectChatRequest, getMessages, sendMessageRest, uploadChatFile, markMessagesRead, API_BASE } from '../api/client';
 import { Loading } from '../components/UI';
 
 export default function Chat() {
@@ -47,7 +47,10 @@ export default function Chat() {
         try {
             const res = await getMessages(convoId);
             const msgs = res.data;
-            setMessages(Array.isArray(msgs) ? msgs : (msgs?.data || []));
+            const msgArray = Array.isArray(msgs) ? msgs : (msgs?.data || []);
+            setMessages(msgArray);
+            // Mark messages as read when opening conversation
+            markMessagesRead(convoId).catch(() => {});
         } catch (err) {
             console.error(err);
             setMessages([]);

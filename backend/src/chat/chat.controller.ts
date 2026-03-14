@@ -183,7 +183,7 @@ export class ChatController {
             include: {
                 User: { select: { id: true, name: true } },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: 'asc' },
             skip,
             take,
         });
@@ -195,6 +195,32 @@ export class ChatController {
                 User: undefined,
             })),
         };
+    }
+
+    // Mark messages as read in a conversation
+    @Post('conversations/:conversationId/read')
+    async markAsRead(
+        @Param('conversationId') conversationId: string,
+        @Request() req,
+    ) {
+        const conversation = await this.prisma.conversation.findUnique({
+            where: { id: conversationId },
+        });
+        if (!conversation) throw new NotFoundException('Conversation not found');
+        if (conversation.user1Id !== req.user.id && conversation.user2Id !== req.user.id) {
+            throw new ForbiddenException('Not your conversation');
+        }
+
+        await this.prisma.message.updateMany({
+            where: {
+                conversationId,
+                senderId: { not: req.user.id },
+                read: false,
+            },
+            data: { read: true },
+        });
+
+        return { success: true };
     }
 
     // Send a text message  
