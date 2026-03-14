@@ -13,8 +13,7 @@ export class FilesController {
     constructor(private filesService: FilesService) { }
 
     @Post()
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(Role.FREELANCER)
+    @UseGuards(AuthGuard('jwt'))
     @UseInterceptors(
         FileInterceptor('file', {
             storage: diskStorage({
@@ -64,8 +63,7 @@ export class FilesController {
     }
 
     @Delete(':fileId')
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(Role.FREELANCER)
+    @UseGuards(AuthGuard('jwt'))
     deleteFile(
         @Param('workPartId') workPartId: string,
         @Param('fileId') fileId: string,
