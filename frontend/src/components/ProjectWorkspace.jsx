@@ -57,7 +57,7 @@ export default function ProjectWorkspace({ taskId, user }) {
         files: (p.WorkFile || []).map(f => ({
           ...f,
           uploader: f.User,
-          url: `${API_BASE}/uploads/work-files/${f.filename}`,
+          url: f.path?.startsWith('http') ? f.path : `${API_BASE}/uploads/work-files/${f.filename}`,
         })),
       })));
       setError('');
@@ -117,7 +117,7 @@ export default function ProjectWorkspace({ taskId, user }) {
       const uploaded = res.data;
       const newFile = {
         ...uploaded,
-        url: `${API_BASE}/uploads/work-files/${uploaded.filename}`,
+        url: uploaded.path?.startsWith('http') ? uploaded.path : `${API_BASE}/uploads/work-files/${uploaded.filename}`,
         uploader: { name: user.name || 'You' },
       };
       setWorkParts(prev => prev.map(p =>

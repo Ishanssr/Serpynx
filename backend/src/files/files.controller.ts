@@ -2,11 +2,7 @@ import { Controller, Post, Delete, Get, Param, UseGuards, Request, UploadedFile,
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesService } from './files.service';
-import { Roles } from '../common/roles.decorator';
-import { RolesGuard } from '../common/roles.guard';
-import { Role } from '@prisma/client';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 
 @Controller('api/work-parts/:workPartId/files')
 export class FilesController {
@@ -16,36 +12,17 @@ export class FilesController {
     @UseGuards(AuthGuard('jwt'))
     @UseInterceptors(
         FileInterceptor('file', {
-            storage: diskStorage({
-                destination: './uploads/work-files',
-                filename: (req, file, cb) => {
-                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                    cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-                },
-            }),
+            storage: memoryStorage(),
             fileFilter: (req, file, cb) => {
-                // Allow common file types for work proofs
                 const allowedMimes = [
-                    'image/jpeg',
-                    'image/png',
-                    'image/gif',
-                    'application/pdf',
-                    'text/plain',
-                    'application/zip',
-                    'application/x-zip-compressed',
-                    'video/mp4',
-                    'video/quicktime',
+                    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+                    'application/pdf', 'text/plain',
+                    'application/zip', 'application/x-zip-compressed',
+                    'video/mp4', 'video/quicktime',
                 ];
-                
-                if (allowedMimes.includes(file.mimetype)) {
-                    cb(null, true);
-                } else {
-                    cb(new Error('Invalid file type. Allowed types: images, PDF, text, zip, and video files.'), false);
-                }
+                cb(null, allowedMimes.includes(file.mimetype));
             },
-            limits: {
-                fileSize: 50 * 1024 * 1024, // 50MB limit
-            },
+            limits: { fileSize: 50 * 1024 * 1024 },
         }),
     )
     uploadFile(

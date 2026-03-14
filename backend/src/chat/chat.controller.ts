@@ -4,10 +4,10 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('api/chat')
@@ -15,6 +15,7 @@ export class ChatController {
     constructor(
         private prisma: PrismaService,
         private notificationsService: NotificationsService,
+        private cloudinary: CloudinaryService,
     ) {}
 
     // Send a chat request to another user
@@ -274,17 +275,11 @@ export class ChatController {
         return { ...message, sender: message.User, User: undefined };
     }
 
-    // Upload a file and send as message
+    // Upload a file and send as message (Cloudinary)
     @Post('conversations/:conversationId/upload')
     @UseInterceptors(
         FileInterceptor('file', {
-            storage: diskStorage({
-                destination: './uploads/chat-files',
-                filename: (req, file, cb) => {
-                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                    cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-                },
-            }),
+            storage: memoryStorage(),
             fileFilter: (req, file, cb) => {
                 const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf', 'text/plain', 'application/zip', 'application/x-zip-compressed'];
                 cb(null, allowed.includes(file.mimetype));
@@ -298,7 +293,7 @@ export class ChatController {
         @Body() body: { content?: string },
         @Request() req,
     ) {
-        if (!file) throw new BadRequestException('No file uploaded');
+        if (!file) throw new BadRequestException('No file uploaded or file type not allowed');
 
         const conversation = await this.prisma.conversation.findUnique({
             where: { id: conversationId },
@@ -308,7 +303,15 @@ export class ChatController {
             throw new ForbiddenException('Not your conversation');
         }
 
-        const fileUrl = `/uploads/chat-files/${file.filename}`;
+        // Upload to Cloudinary
+        let fileUrl: string;
+        try {
+            const result = await this.cloudinary.upload(file, 'chat-files');
+            fileUrl = result.url;
+        } catch (err) {
+            throw new BadRequestException('File upload failed. Please check Cloudinary configuration.');
+        }
+
         const message = await this.prisma.message.create({
             data: {
                 content: body.content || '',

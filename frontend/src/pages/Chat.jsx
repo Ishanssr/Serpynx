@@ -112,7 +112,7 @@ export default function Chat() {
 
     const renderAttachment = (msg) => {
         if (!msg.fileUrl) return null;
-        const fullUrl = `${API_BASE}${msg.fileUrl}`;
+        const fullUrl = msg.fileUrl.startsWith('http') ? msg.fileUrl : `${API_BASE}${msg.fileUrl}`;
         const isSent = msg.senderId === user?.id;
 
         if (isImage(msg.fileType)) {

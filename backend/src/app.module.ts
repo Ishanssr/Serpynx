@@ -16,6 +16,7 @@ import { WorkPartsModule } from './work-parts/work-parts.module';
 import { UsersModule } from './users/users.module';
 import { TeamsModule } from './teams/teams.module';
 import { ChatModule } from './chat/chat.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { HealthController } from './common/health.controller';
 
 @Module({
@@ -39,6 +40,7 @@ import { HealthController } from './common/health.controller';
     UsersModule,
     TeamsModule,
     ChatModule,
+    CloudinaryModule,
   ],
   controllers: [HealthController],
   providers: [
